@@ -71,8 +71,15 @@ go test -json ./... | go-ctrf-json-reporter -output ctrf-report.json
 
 ``` bash
 go test -json ./... | go-ctrf-json-reporter \
--output ctrf-report.json \
--verbose
+-output custom-name.json \
+-verbose \
+-appName "MyApp" \
+-appVersion "1.0.0" \
+-osPlatform "Linux" \
+-osRelease "18.04" \
+-osVersion "5.4.0" \
+-buildName "MyAppBuild" \
+-buildNumber "100"
 ```
 
 ## Integration with gotestsum

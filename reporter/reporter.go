@@ -8,23 +8,23 @@ import (
 )
 
 type TestEvent struct {
-	Time    string  
-	Action  string  
-	Package string  
-	Test    string  
-	Elapsed float64 
-	Output  string  
+	Time    string
+	Action  string
+	Package string
+	Test    string
+	Elapsed float64
+	Output  string
 }
 
 type Summary struct {
-	Tests       int `json:"tests"`
-	Passed      int `json:"passed"`
-	Failed      int `json:"failed"`
-	Pending     int `json:"pending"`
-	Skipped     int `json:"skipped"`
-	Other       int `json:"other"`
-	Start		int `json:"start"`
-	Stop		int `json:"stop"`
+	Tests   int `json:"tests"`
+	Passed  int `json:"passed"`
+	Failed  int `json:"failed"`
+	Pending int `json:"pending"`
+	Skipped int `json:"skipped"`
+	Other   int `json:"other"`
+	Start   int `json:"start"`
+	Stop    int `json:"stop"`
 }
 
 type TestResult struct {
@@ -33,17 +33,37 @@ type TestResult struct {
 	Duration float64 `json:"duration"`
 }
 
+type Environment struct {
+	AppName     *string `json:"appName,omitempty"`
+	AppVersion  *string `json:"appVersion,omitempty"`
+	OSPlatform  *string `json:"osPlatform,omitempty"`
+	OSRelease   *string `json:"osRelease,omitempty"`
+	OSVersion   *string `json:"osVersion,omitempty"`
+	BuildName   *string `json:"buildName,omitempty"`
+	BuildNumber *string `json:"buildNumber,omitempty"`
+}
+
+func (e Environment) MarshalJSON() ([]byte, error) {
+	type Alias Environment
+	return json.Marshal(&struct {
+		*Alias
+	}{
+		Alias: (*Alias)(&e),
+	})
+}
+
 type FinalReport struct {
 	Results struct {
 		Tool struct {
 			Name string `json:"name"`
 		} `json:"tool"`
-		Summary Summary  `json:"summary"`
-		Tests  []TestResult `json:"tests"`
+		Summary     Summary      `json:"summary"`
+		Tests       []TestResult `json:"tests"`
+        Environment *Environment  `json:"environment,omitempty"`
 	} `json:"results"`
 }
 
-func ParseTestResults(r io.Reader, verbose bool) (*FinalReport, error) {
+func ParseTestResults(r io.Reader, verbose bool, env *Environment) (*FinalReport, error) {
 	var testEvents []TestEvent
 	decoder := json.NewDecoder(r)
 
@@ -61,6 +81,8 @@ func ParseTestResults(r io.Reader, verbose bool) (*FinalReport, error) {
 	report.Results.Tool.Name = "gotest"
 	report.Results.Summary = Summary{}
 	report.Results.Tests = make([]TestResult, 0)
+
+	report.Results.Environment = env
 
 	for _, event := range testEvents {
 		if verbose {
