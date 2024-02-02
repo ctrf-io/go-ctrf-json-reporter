@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"myreporter"
+	"github.com/ctrf-io/go-ctrf-json-reporter/reporter"
 	"os"
 )
 
