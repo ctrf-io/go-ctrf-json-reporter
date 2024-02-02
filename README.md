@@ -75,8 +75,16 @@ go test -json ./... | go-ctrf-json-reporter \
 -verbose
 ```
 
+## Integration with gotestsum
+
+go-ctrf-json-reporter can be used in conjunction with gotestsum
+
+``` bash
+gotestsum --jsonfile gotestsum.json && go-ctrf-json-reporter < gotestsum.json
+```
+
 ## Troubleshoot
 
 ### Command Not Found
 
-Whenrunning go-ctrf-json-reporter results in a "command not found" error this usually means that the Go bin directory is not in your system's PATH.
+When running go-ctrf-json-reporter results in a "command not found" error this usually means that the Go bin directory is not in your system's PATH.
