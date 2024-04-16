@@ -4,20 +4,16 @@ A Go JSON test reporter to create test reports that follow the CTRF standard.
 
 [Common Test Report Format](https://ctrf.io) ensures the generation of uniform JSON test reports, independent of programming languages or test framework in use.
 
+⭐ **If you find this project useful, consider giving it a GitHub star** ⭐
+
+It means a lot to us and helps us grow this open source library.
+
 ## Features
 
 - Generate JSON test reports that are [CTRF](https://ctrf.io) compliant
 - Straightforward integration with Go
 
-## What is CTRF?
 
-CTRF is a universal JSON test report schema that addresses the lack of a standardized format for JSON test reports.
-
-**Consistency Across Tools:** Different testing tools and frameworks often produce reports in varied formats. CTRF ensures a uniform structure, making it easier to understand and compare reports, regardless of the testing tool used.
-
-**Language and Framework Agnostic:** It provides a universal reporting schema that works seamlessly with any programming language and testing framework.
-
-**Facilitates Better Analysis:** With a standardized format, programatically analyzing test outcomes across multiple platforms becomes more straightforward.
 
 ```json
 {
@@ -50,6 +46,16 @@ CTRF is a universal JSON test report schema that addresses the lack of a standar
   }
 }
 ```
+
+## What is CTRF?
+
+CTRF is a universal JSON test report schema that addresses the lack of a standardized format for JSON test reports.
+
+**Consistency Across Tools:** Different testing tools and frameworks often produce reports in varied formats. CTRF ensures a uniform structure, making it easier to understand and compare reports, regardless of the testing tool used.
+
+**Language and Framework Agnostic:** It provides a universal reporting schema that works seamlessly with any programming language and testing framework.
+
+**Facilitates Better Analysis:** With a standardized format, programatically analyzing test outcomes across multiple platforms becomes more straightforward.
 
 ## Installation
 
