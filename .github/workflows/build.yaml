@@ -1,0 +1,51 @@
+name: Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        go-version: [ 1.19.x, 1.20.x, 1.21.x ]
+        lint-and-coverage: [ false ]
+        include:
+          - go-version: 1.22.x
+            lint-and-coverage: true
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go ${{ matrix.go-version }}
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: Install dependencies
+        run: go get ./...
+
+      - name: Build
+        run: go build -v ./...
+
+      - name: Test with the Go CLI
+        run: |
+          go version
+          if [ ${{ matrix.lint-and-coverage }} = true ]; then
+              GO_TEST_OPTS="-covermode=atomic -coverprofile=coverage.out"
+          fi
+          export GORACE="halt_on_error=1"
+          go test -race $GO_TEST_OPTS ./...
+
+      - name: Reporting coverage
+        if: matrix.lint-and-coverage
+        uses: shogo82148/actions-goveralls@v1
+        with:
+          path-to-profile: coverage.out
