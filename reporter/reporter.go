@@ -49,7 +49,7 @@ func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment) (*ctrf.R
 				report.Results.Tests = append(report.Results.Tests, &ctrf.TestResult{
 					Name:     event.Test,
 					Status:   ctrf.TestPassed,
-					Duration: event.Elapsed,
+					Duration: secondsToMillis(event.Elapsed),
 				})
 			} else if event.Action == "fail" {
 				report.Results.Summary.Tests++
@@ -57,7 +57,7 @@ func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment) (*ctrf.R
 				report.Results.Tests = append(report.Results.Tests, &ctrf.TestResult{
 					Name:     event.Test,
 					Status:   ctrf.TestFailed,
-					Duration: event.Elapsed,
+					Duration: secondsToMillis(event.Elapsed),
 				})
 			} else if event.Action == "skip" {
 				report.Results.Summary.Tests++
@@ -65,7 +65,7 @@ func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment) (*ctrf.R
 				report.Results.Tests = append(report.Results.Tests, &ctrf.TestResult{
 					Name:     event.Test,
 					Status:   ctrf.TestSkipped,
-					Duration: event.Elapsed,
+					Duration: secondsToMillis(event.Elapsed),
 				})
 			}
 		}
@@ -82,4 +82,8 @@ func WriteReportToFile(filename string, report *ctrf.Report) error {
 
 	fmt.Println("go-ctrf-json-reporter: successfully written ctrf json to", filename)
 	return nil
+}
+
+func secondsToMillis(seconds float64) int64 {
+	return int64(seconds * 1000)
 }

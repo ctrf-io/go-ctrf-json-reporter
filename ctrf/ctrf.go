@@ -186,7 +186,7 @@ const (
 type TestResult struct {
 	Name       string        `json:"name"`
 	Status     TestStatus    `json:"status"`
-	Duration   float64       `json:"duration"`
+	Duration   int64         `json:"duration"`
 	Start      int64         `json:"start,omitempty"`
 	Stop       int64         `json:"stop,omitempty"`
 	Suite      string        `json:"suite,omitempty"`
