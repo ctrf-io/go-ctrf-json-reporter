@@ -1,4 +1,7 @@
-# Go JSON Reporter
+# Go CTRF JSON format support
+
+## Go JSON Reporter
+
 
 A Go JSON test reporter to create test reports that follow the CTRF standard.
 
@@ -115,3 +118,26 @@ When running go-ctrf-json-reporter results in a "command not found" error this u
 ## Support Us
 
 If you find this project useful, consider giving it a GitHub star ⭐ It means a lot to us.
+
+
+## Generate a CTRF JSON report in your own testing tool written in go
+
+If you are writting your own testing tool and wish to generate a CTRF JSON report, you can use the `ctrf` package.
+
+```go
+import (
+  "github.com/ctrf-io/go-ctrf-json-reporter/ctrf"
+)
+
+func runTests(destinationReportFile string) error {
+  env := ctrf.Environment{
+    // add your environment details here
+  }	
+  report := ctrf.NewReport("my-awesome-testing-tool", &env)
+    
+  // run your tests and populate the report object here
+
+  return report.WriteFile(destinationReportFile)
+}
+
+```
