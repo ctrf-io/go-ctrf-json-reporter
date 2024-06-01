@@ -2,7 +2,6 @@
 
 ## Go JSON Reporter
 
-
 A Go JSON test reporter to create test reports that follow the CTRF standard.
 
 [Common Test Report Format](https://ctrf.io) ensures the generation of uniform JSON test reports, independent of programming languages or test framework in use.
@@ -10,6 +9,24 @@ A Go JSON test reporter to create test reports that follow the CTRF standard.
 ⭐ **If you find this project useful, consider giving it a GitHub star** ⭐
 
 It means a lot to us and helps us grow this open source library.
+
+## We need your help
+
+We believe CTRF can save **a lot** of time for engineers, a single data serialisation report, well structured, community driven and works with any framework. For over 30s years software engineers have used a de facto data serialisation report, you know the one! But we feel it’s time to modernise.
+
+The only way we can grow CTRF is with your help and the support of the software engineering community.
+
+## How can you help?
+
+- Join and build with us! We are looking for [contributors](https://github.com/ctrf-io), get involved in this early stage project. All contributions are welcome.
+- Give this repository a star ⭐⭐⭐⭐⭐⭐
+- Follow the CTRF [GitHub organisation](https://github.com/ctrf-io)
+- Clap for our medium articles (30 times each) 👏
+- Share, share share! Discord, Reddit, Twitter, LinkedIn, Slack, Teams, whereever! - please share our [libraries](https://github.com/orgs/ctrf-io/repositories), our [homepage](https://www.ctrf.io/), our [Medium articles](https://medium.com/@ma11hewthomas)
+- Maybe even write a blog about us!
+- Try our [tools](https://github.com/orgs/ctrf-io/repositories)
+
+**Thank you so much!!**
 
 ## Features
 
