@@ -116,27 +116,6 @@ go-ctrf-json-reporter can be used in conjunction with gotestsum
 gotestsum --jsonfile gotestsum.json && go-ctrf-json-reporter < gotestsum.json
 ```
 
-## Test Object Properties
-
-The test object in the report includes the following [CTRF properties](https://ctrf.io/docs/schema/test):
-
-| Name       | Type   | Required | Details                                                                             |
-| ---------- | ------ | -------- | ----------------------------------------------------------------------------------- |
-| `name`     | String | Required | The name of the test.                                                               |
-| `status`   | String | Required | The outcome of the test. One of: `passed`, `failed`, `skipped`, `pending`, `other`. |
-| `duration` | Number | Required | The time taken for the test execution, in milliseconds.                             |
-
-## Troubleshoot
-
-### Command Not Found
-
-When running go-ctrf-json-reporter results in a "command not found" error this usually means that the Go bin directory is not in your system's PATH.
-
-## Support Us
-
-If you find this project useful, consider giving it a GitHub star ⭐ It means a lot to us.
-
-
 ## Generate a CTRF JSON report in your own testing tool written in go
 
 If you are writting your own testing tool and wish to generate a CTRF JSON report, you can use the `ctrf` package.
@@ -158,3 +137,23 @@ func runTests(destinationReportFile string) error {
 }
 
 ```
+
+## Test Object Properties
+
+The test object in the report includes the following [CTRF properties](https://ctrf.io/docs/schema/test):
+
+| Name       | Type   | Required | Details                                                                             |
+| ---------- | ------ | -------- | ----------------------------------------------------------------------------------- |
+| `name`     | String | Required | The name of the test.                                                               |
+| `status`   | String | Required | The outcome of the test. One of: `passed`, `failed`, `skipped`, `pending`, `other`. |
+| `duration` | Number | Required | The time taken for the test execution, in milliseconds.                             |
+
+## Troubleshoot
+
+### Command Not Found
+
+When running go-ctrf-json-reporter results in a "command not found" error this usually means that the Go bin directory is not in your system's PATH.
+
+## Support Us
+
+If you find this project useful, consider giving it a GitHub star ⭐ It means a lot to us.
