@@ -126,6 +126,7 @@ The test object in the report includes the following [CTRF properties](https://c
 
 | Name       | Type   | Required | Details                                                                             |
 | ---------- | ------ | -------- | ----------------------------------------------------------------------------------- |
+| `suite`    | String | Required | The name of go package containing the test.                                         |
 | `name`     | String | Required | The name of the test.                                                               |
 | `status`   | String | Required | The outcome of the test. One of: `passed`, `failed`, `skipped`, `pending`, `other`. |
 | `duration` | Number | Required | The time taken for the test execution, in milliseconds.                             |
