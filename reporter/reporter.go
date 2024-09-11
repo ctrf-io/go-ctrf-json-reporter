@@ -59,11 +59,11 @@ func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment) (*ctrf.R
 				report.Results.Summary.Stop = endTime
 			}
 		}
-
 		if event.Action == "pass" {
 			report.Results.Summary.Tests++
 			report.Results.Summary.Passed++
 			report.Results.Tests = append(report.Results.Tests, &ctrf.TestResult{
+				Suite:    event.Package,
 				Name:     event.Test,
 				Status:   ctrf.TestPassed,
 				Duration: duration,
@@ -72,6 +72,7 @@ func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment) (*ctrf.R
 			report.Results.Summary.Tests++
 			report.Results.Summary.Failed++
 			report.Results.Tests = append(report.Results.Tests, &ctrf.TestResult{
+				Suite:    event.Package,
 				Name:     event.Test,
 				Status:   ctrf.TestFailed,
 				Duration: duration,
@@ -80,11 +81,13 @@ func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment) (*ctrf.R
 			report.Results.Summary.Tests++
 			report.Results.Summary.Skipped++
 			report.Results.Tests = append(report.Results.Tests, &ctrf.TestResult{
+				Suite:    event.Package,
 				Name:     event.Test,
 				Status:   ctrf.TestSkipped,
 				Duration: duration,
 			})
 		}
+
 	}
 	return report, nil
 }
@@ -94,7 +97,6 @@ func WriteReportToFile(filename string, report *ctrf.Report) error {
 	if err != nil {
 		return err
 	}
-
 	fmt.Println("go-ctrf-json-reporter: successfully written ctrf json to", filename)
 	return nil
 }
@@ -102,17 +104,12 @@ func WriteReportToFile(filename string, report *ctrf.Report) error {
 func secondsToMillis(seconds float64) int64 {
 	return int64(seconds * 1000)
 }
-func parseTimeString(timeString string) (int64, error) {
-	// Define the layout for parsing the time string
-	layout := time.RFC3339Nano
 
-	// Parse the time string
+func parseTimeString(timeString string) (int64, error) {	
+	layout := time.RFC3339Nano
 	t, err := time.Parse(layout, timeString)
 	if err != nil {
 		return 0, err
 	}
-
-	// Convert the time to Unix timestamp in milliseconds
-	timestamp := t.UnixNano() / int64(time.Millisecond)
-	return timestamp, nil
+	return t.UnixNano() / int64(time.Millisecond), nil
 }
