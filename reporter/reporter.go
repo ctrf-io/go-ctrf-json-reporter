@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 
 	"github.com/ctrf-io/go-ctrf-json-reporter/ctrf"
 )
@@ -33,7 +34,7 @@ func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment) (*ctrf.R
 	}
 
 	report := ctrf.NewReport("gotest", env)
-
+	report.Results.Summary.Start = time.Now().UnixNano() / int64(time.Millisecond)
 	for _, event := range testEvents {
 		if verbose {
 			jsonEvent, err := json.Marshal(event)
@@ -42,38 +43,52 @@ func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment) (*ctrf.R
 			}
 			fmt.Println(string(jsonEvent))
 		}
-		if event.Test != "" {
-			if event.Action == "pass" {
-				report.Results.Summary.Tests++
-				report.Results.Summary.Passed++
-				report.Results.Tests = append(report.Results.Tests, &ctrf.TestResult{
-					Suite:    event.Package,
-					Name:     event.Test,
-					Status:   ctrf.TestPassed,
-					Duration: secondsToMillis(event.Elapsed),
-				})
-			} else if event.Action == "fail" {
-				report.Results.Summary.Tests++
-				report.Results.Summary.Failed++
-				report.Results.Tests = append(report.Results.Tests, &ctrf.TestResult{
-					Suite:    event.Package,
-					Name:     event.Test,
-					Status:   ctrf.TestFailed,
-					Duration: secondsToMillis(event.Elapsed),
-				})
-			} else if event.Action == "skip" {
-				report.Results.Summary.Tests++
-				report.Results.Summary.Skipped++
-				report.Results.Tests = append(report.Results.Tests, &ctrf.TestResult{
-					Suite:    event.Package,
-					Name:     event.Test,
-					Status:   ctrf.TestSkipped,
-					Duration: secondsToMillis(event.Elapsed),
-				})
+		if event.Test == "" {
+			continue
+		}
+		startTime, err := parseTimeString(event.Time)
+		duration := secondsToMillis(event.Elapsed)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error parsing test event start time '%s' : %v\n", event.Time, err)
+		} else {
+			if report.Results.Summary.Start > startTime {
+				report.Results.Summary.Start = startTime
+			}
+			endTime := startTime + duration
+			if report.Results.Summary.Stop < endTime {
+				report.Results.Summary.Stop = endTime
 			}
 		}
-	}
+		if event.Action == "pass" {
+			report.Results.Summary.Tests++
+			report.Results.Summary.Passed++
+			report.Results.Tests = append(report.Results.Tests, &ctrf.TestResult{
+				Suite:    event.Package,
+				Name:     event.Test,
+				Status:   ctrf.TestPassed,
+				Duration: duration,
+			})
+		} else if event.Action == "fail" {
+			report.Results.Summary.Tests++
+			report.Results.Summary.Failed++
+			report.Results.Tests = append(report.Results.Tests, &ctrf.TestResult{
+				Suite:    event.Package,
+				Name:     event.Test,
+				Status:   ctrf.TestFailed,
+				Duration: duration,
+			})
+		} else if event.Action == "skip" {
+			report.Results.Summary.Tests++
+			report.Results.Summary.Skipped++
+			report.Results.Tests = append(report.Results.Tests, &ctrf.TestResult{
+				Suite:    event.Package,
+				Name:     event.Test,
+				Status:   ctrf.TestSkipped,
+				Duration: duration,
+			})
+		}
 
+	}
 	return report, nil
 }
 
@@ -82,11 +97,18 @@ func WriteReportToFile(filename string, report *ctrf.Report) error {
 	if err != nil {
 		return err
 	}
-
 	fmt.Println("go-ctrf-json-reporter: successfully written ctrf json to", filename)
 	return nil
 }
 
 func secondsToMillis(seconds float64) int64 {
 	return int64(seconds * 1000)
+}
+
+func parseTimeString(timeString string) (int64, error) {	
+	t, err := time.Parse(time.RFC3339Nano, timeString)
+	if err != nil {
+		return 0, err
+	}
+	return t.UnixNano() / int64(time.Millisecond), nil
 }
