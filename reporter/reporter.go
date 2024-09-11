@@ -106,8 +106,7 @@ func secondsToMillis(seconds float64) int64 {
 }
 
 func parseTimeString(timeString string) (int64, error) {	
-	layout := time.RFC3339Nano
-	t, err := time.Parse(layout, timeString)
+	t, err := time.Parse(time.RFC3339Nano, timeString)
 	if err != nil {
 		return 0, err
 	}
