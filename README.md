@@ -49,16 +49,6 @@ A Go JSON test reporter to create test reports that follow the CTRF standard.
 }
 ```
 
-## What is CTRF?
-
-CTRF is a universal JSON test report schema that addresses the lack of a standardized format for JSON test reports.
-
-**Consistency Across Tools:** Different testing tools and frameworks often produce reports in varied formats. CTRF ensures a uniform structure, making it easier to understand and compare reports, regardless of the testing tool used.
-
-**Language and Framework Agnostic:** It provides a universal reporting schema that works seamlessly with any programming language and testing framework.
-
-**Facilitates Better Analysis:** With a standardized format, programatically analyzing test outcomes across multiple platforms becomes more straightforward.
-
 ## Installation
 
 To install go-ctrf-json-reporter, ensure you have Go installed on your system, then run:
@@ -126,7 +116,6 @@ The test object in the report includes the following [CTRF properties](https://c
 
 | Name       | Type   | Required | Details                                                                             |
 | ---------- | ------ | -------- | ----------------------------------------------------------------------------------- |
-| `suite`    | String | Required | The name of go package containing the test.                                         |
 | `name`     | String | Required | The name of the test.                                                               |
 | `status`   | String | Required | The outcome of the test. One of: `passed`, `failed`, `skipped`, `pending`, `other`. |
 | `duration` | Number | Required | The time taken for the test execution, in milliseconds.                             |
@@ -136,6 +125,16 @@ The test object in the report includes the following [CTRF properties](https://c
 ### Command Not Found
 
 When running go-ctrf-json-reporter results in a "command not found" error this usually means that the Go bin directory is not in your system's PATH.
+
+## What is CTRF?
+
+CTRF is a universal JSON test report schema that addresses the lack of a standardized format for JSON test reports.
+
+**Consistency Across Tools:** Different testing tools and frameworks often produce reports in varied formats. CTRF ensures a uniform structure, making it easier to understand and compare reports, regardless of the testing tool used.
+
+**Language and Framework Agnostic:** It provides a universal reporting schema that works seamlessly with any programming language and testing framework.
+
+**Facilitates Better Analysis:** With a standardized format, programatically analyzing test outcomes across multiple platforms becomes more straightforward.
 
 ## Support Us
 
