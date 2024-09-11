@@ -47,6 +47,7 @@ func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment) (*ctrf.R
 				report.Results.Summary.Tests++
 				report.Results.Summary.Passed++
 				report.Results.Tests = append(report.Results.Tests, &ctrf.TestResult{
+					Suite:    event.Package,
 					Name:     event.Test,
 					Status:   ctrf.TestPassed,
 					Duration: secondsToMillis(event.Elapsed),
@@ -55,6 +56,7 @@ func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment) (*ctrf.R
 				report.Results.Summary.Tests++
 				report.Results.Summary.Failed++
 				report.Results.Tests = append(report.Results.Tests, &ctrf.TestResult{
+					Suite:    event.Package,
 					Name:     event.Test,
 					Status:   ctrf.TestFailed,
 					Duration: secondsToMillis(event.Elapsed),
@@ -63,6 +65,7 @@ func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment) (*ctrf.R
 				report.Results.Summary.Tests++
 				report.Results.Summary.Skipped++
 				report.Results.Tests = append(report.Results.Tests, &ctrf.TestResult{
+					Suite:    event.Package,
 					Name:     event.Test,
 					Status:   ctrf.TestSkipped,
 					Duration: secondsToMillis(event.Elapsed),
