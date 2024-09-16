@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/ctrf-io/go-ctrf-json-reporter/ctrf"
@@ -35,7 +36,7 @@ func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment) (*ctrf.R
 
 	report := ctrf.NewReport("gotest", env)
 	report.Results.Summary.Start = time.Now().UnixNano() / int64(time.Millisecond)
-	for _, event := range testEvents {
+	for i, event := range testEvents {
 		if verbose {
 			jsonEvent, err := json.Marshal(event)
 			if err != nil {
@@ -76,6 +77,7 @@ func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment) (*ctrf.R
 				Name:     event.Test,
 				Status:   ctrf.TestFailed,
 				Duration: duration,
+				Message:  getMessagesForTest(testEvents, i, event.Package, event.Test),
 			})
 		} else if event.Action == "skip" {
 			report.Results.Summary.Tests++
@@ -91,6 +93,20 @@ func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment) (*ctrf.R
 	}
 	return report, nil
 }
+func getMessagesForTest(testEvents []TestEvent, index int, packageName, testName string) string {
+	var messages []string
+	for i := index; i >= 0; i-- {
+		if testEvents[i].Package == packageName && testEvents[i].Test == testName {
+			if testEvents[i].Action == "output" {
+				messages = append(messages, testEvents[i].Output)
+			}
+		} else {
+			break
+		}
+	}
+	reverse(messages)
+	return strings.Join(messages, "")
+}
 
 func WriteReportToFile(filename string, report *ctrf.Report) error {
 	err := report.WriteFile(filename)
@@ -105,10 +121,16 @@ func secondsToMillis(seconds float64) int64 {
 	return int64(seconds * 1000)
 }
 
-func parseTimeString(timeString string) (int64, error) {	
+func parseTimeString(timeString string) (int64, error) {
 	t, err := time.Parse(time.RFC3339Nano, timeString)
 	if err != nil {
 		return 0, err
 	}
 	return t.UnixNano() / int64(time.Millisecond), nil
+}
+
+func reverse(s []string) {
+	for i, j := 0, len(s)-1; i < j; i, j = i+1, j-1 {
+		s[i], s[j] = s[j], s[i]
+	}
 }
