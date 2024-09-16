@@ -119,6 +119,7 @@ The test object in the report includes the following [CTRF properties](https://c
 | `name`     | String | Required | The name of the test.                                                               |
 | `status`   | String | Required | The outcome of the test. One of: `passed`, `failed`, `skipped`, `pending`, `other`. |
 | `duration` | Number | Required | The time taken for the test execution, in milliseconds.                             |
+| `message`  | String | Optional | The failure message if the test failed.                                             |
 | `suite`    | String | Required | The name of go package containing the test.                                         |
 
 ## Troubleshoot
