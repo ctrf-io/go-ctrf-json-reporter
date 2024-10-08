@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -19,6 +20,8 @@ type TestEvent struct {
 	Elapsed float64
 	Output  string
 }
+
+var filenameMatcher = regexp.MustCompile(`([a-zA-Z0-9_/]+\.go):(\d+)`)
 
 func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment) (*ctrf.Report, error) {
 	var testEvents []TestEvent
@@ -70,14 +73,23 @@ func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment) (*ctrf.R
 				Duration: duration,
 			})
 		} else if event.Action == "fail" {
+			message := getMessagesForTest(testEvents, i, event.Package, event.Test)
+			matches := filenameMatcher.FindAllStringSubmatch(message, -1)
+			trace := ""
+			if len(matches) > 0 {
+				trace = matches[0][0]
+			}
+
 			report.Results.Summary.Tests++
 			report.Results.Summary.Failed++
 			report.Results.Tests = append(report.Results.Tests, &ctrf.TestResult{
-				Suite:    event.Package,
 				Name:     event.Test,
 				Status:   ctrf.TestFailed,
 				Duration: duration,
-				Message:  getMessagesForTest(testEvents, i, event.Package, event.Test),
+				Suite:    event.Package,
+				Message:  message,
+				Trace:    trace,
+				Filepath: trace,
 			})
 		} else if event.Action == "skip" {
 			report.Results.Summary.Tests++
@@ -89,7 +101,6 @@ func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment) (*ctrf.R
 				Duration: duration,
 			})
 		}
-
 	}
 	return report, nil
 }
