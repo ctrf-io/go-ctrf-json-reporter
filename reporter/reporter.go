@@ -4,7 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
+	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -91,8 +94,50 @@ func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment) (*ctrf.R
 		}
 
 	}
+
+	enrichReportWithFilenames(report)
+
 	return report, nil
 }
+
+func generateTestMap() map[string][]string {
+	tests := map[string][]string{}
+
+	r := regexp.MustCompile(`Test.\w+`)
+	if err := filepath.WalkDir(".", func(path string, d fs.DirEntry, err error) error {
+		if !strings.HasSuffix(path, "_test.go") || err != nil {
+			return nil
+		}
+
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return nil
+		}
+
+		tests[path] = r.FindAllString(string(data), -1)
+
+		return nil
+	}); err != nil {
+		return tests
+	}
+
+	return tests
+}
+
+func enrichReportWithFilenames(report *ctrf.Report) {
+	tests := generateTestMap()
+
+	for i, testResult := range report.Results.Tests {
+		for file, names := range tests {
+			for _, name := range names {
+				if strings.Contains(testResult.Name, name) {
+					report.Results.Tests[i].Filepath = file
+				}
+			}
+		}
+	}
+}
+
 func getMessagesForTest(testEvents []TestEvent, index int, packageName, testName string) string {
 	var messages []string
 	for i := index; i >= 0; i-- {
