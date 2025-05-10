@@ -8,6 +8,8 @@ import (
 	"os"
 )
 
+var buildFailed bool
+
 func main() {
 	var outputFile string
 	var verbose bool
@@ -66,6 +68,29 @@ func main() {
 	err = reporter.WriteReportToFile(outputFile, report)
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "Error writing the report to file: %v\n", err)
+		os.Exit(1)
+	}
+
+	if !verbose {
+		buildOutput := reporter.GetBuildOutput()
+		fmt.Println(buildOutput)
+	}
+
+	if report.Results.Extra != nil {
+		extraMap := report.Results.Extra.(map[string]interface{})
+		if _, ok := extraMap["buildFail"]; ok {
+			buildFailed = true
+		}
+		if _, ok := extraMap["FailedBuild"]; ok {
+			buildFailed = true
+		}
+	}
+
+	if report.Results.Summary.Failed > 0 {
+		buildFailed = true
+	}
+
+	if buildFailed {
 		os.Exit(1)
 	}
 }
