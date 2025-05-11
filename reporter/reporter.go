@@ -23,6 +23,8 @@ type TestEvent struct {
 	Output  string
 }
 
+var buildOutput []string
+
 func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment) (*ctrf.Report, error) {
 	var testEvents []TestEvent
 	decoder := json.NewDecoder(r)
@@ -47,6 +49,43 @@ func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment) (*ctrf.R
 			}
 			fmt.Println(string(jsonEvent))
 		}
+
+		if event.Action == "build-output" || event.Action == "build-fail" || event.Action == "fail" {
+			if report.Results.Extra == nil {
+				report.Results.Extra = make(map[string]interface{})
+			}
+			extraMap := report.Results.Extra.(map[string]interface{})
+
+			if event.Action == "fail" {
+				if _, ok := extraMap["FailedBuild"]; !ok {
+					extraMap["FailedBuild"] = true
+				}
+			}
+
+			if event.Action == "build-output" {
+				if _, ok := extraMap["buildOutput"]; !ok {
+					extraMap["buildOutput"] = []TestEvent{}
+				}
+				buildOutputEvents := extraMap["buildOutput"].([]TestEvent)
+				extraMap["buildOutput"] = append(buildOutputEvents, event)
+				buildOutput = append(buildOutput, event.Output)
+				continue
+			}
+
+			if event.Action == "build-fail" {
+				if _, ok := extraMap["buildFail"]; !ok {
+					extraMap["buildFail"] = []TestEvent{}
+				}
+				buildFailEvents := extraMap["buildFail"].([]TestEvent)
+				extraMap["buildFail"] = append(buildFailEvents, event)
+				break
+			}
+		}
+
+		if event.Action == "output" {
+			buildOutput = append(buildOutput, event.Output)
+		}
+
 		if event.Test == "" {
 			continue
 		}
@@ -160,6 +199,10 @@ func WriteReportToFile(filename string, report *ctrf.Report) error {
 	}
 	fmt.Println("go-ctrf-json-reporter: successfully written ctrf json to", filename)
 	return nil
+}
+
+func GetBuildOutput() string {
+	return strings.Join(buildOutput, "")
 }
 
 func secondsToMillis(seconds float64) int64 {
