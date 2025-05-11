@@ -88,6 +88,7 @@ go test -json ./... | go-ctrf-json-reporter -output ctrf-report.json
 go test -json ./... | go-ctrf-json-reporter \
 -output custom-name.json \
 -verbose \
+-quiet \
 -appName "MyApp" \
 -appVersion "1.0.0" \
 -osPlatform "Linux" \
