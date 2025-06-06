@@ -29,6 +29,9 @@ func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment) (*ctrf.R
 	var testEvents []TestEvent
 	decoder := json.NewDecoder(r)
 
+	report := ctrf.NewReport("gotest", env)
+	report.Results.Summary.Start = time.Now().UnixNano() / int64(time.Millisecond)
+
 	for {
 		var event TestEvent
 		if err := decoder.Decode(&event); err == io.EOF {
@@ -37,18 +40,15 @@ func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment) (*ctrf.R
 			return nil, err
 		}
 		testEvents = append(testEvents, event)
+
+		if verbose {
+			if event.Action == "build-output" || event.Action == "output" {
+				fmt.Print(event.Output)
+			}
+		}
 	}
 
-	report := ctrf.NewReport("gotest", env)
-	report.Results.Summary.Start = time.Now().UnixNano() / int64(time.Millisecond)
 	for i, event := range testEvents {
-		if verbose {
-			jsonEvent, err := json.Marshal(event)
-			if err != nil {
-				_, _ = fmt.Fprintf(os.Stderr, "error: %v\n", err)
-			}
-			fmt.Println(string(jsonEvent))
-		}
 
 		if event.Action == "build-output" || event.Action == "build-fail" || event.Action == "fail" {
 			if report.Results.Extra == nil {
