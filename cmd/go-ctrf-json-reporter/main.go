@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/ctrf-io/go-ctrf-json-reporter/ctrf"
-	"github.com/ctrf-io/go-ctrf-json-reporter/reporter"
+	"github.com/jmaitrehenry/go-ctrf-json-reporter/ctrf"
+	"github.com/jmaitrehenry/go-ctrf-json-reporter/reporter"
 	"os"
 )
 
