@@ -2,9 +2,10 @@ package ctrf
 
 import (
 	"encoding/json"
-	"gopkg.in/yaml.v3"
 	"os"
 	"testing"
+
+	"gopkg.in/yaml.v3"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -12,6 +13,8 @@ import (
 func TestRequiredProperties(t *testing.T) {
 	// Arrange
 	report := Report{
+		ReportFormat: ReportFormatCTRF,
+		SpecVersion:  SpecVersionCTRF,
 		Results: &Results{
 			Tool: &Tool{
 				Name: "my tool",
@@ -57,6 +60,9 @@ func TestRequiredProperties(t *testing.T) {
 	}
 
 	expectedJson := `{
+  "reportFormat": "CTRF",
+  "specVersion": "0.0.0",
+  "timestamp": "0001-01-01T00:00:00Z",
   "results": {
     "tool": {
       "name": "my tool"

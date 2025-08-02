@@ -7,19 +7,39 @@ import (
 	"io"
 	"os"
 	"strings"
+	"time"
+
+	"github.com/google/uuid"
 )
 
 type Report struct {
-	Results *Results `json:"results"`
+	ReportFormat string      `json:"reportFormat"`
+	SpecVersion  string      `json:"specVersion"`
+	ReportId     string      `json:"reportId,omitempty"`
+	Timestamp    time.Time   `json:"timestamp,omitempty"`
+	GeneratedBy  string      `json:"generatedBy,omitempty"`
+	Results      *Results    `json:"results"`
+	Extra        interface{} `json:"extra,omitempty"`
 }
+
+const (
+	ReportFormatCTRF   = "CTRF"
+	SpecVersionCTRF    = "0.0.0"
+	GeneratedByDefault = "go-ctrf-json-reporter"
+)
 
 func NewReport(toolName string, env *Environment) *Report {
 	return &Report{
+		ReportFormat: ReportFormatCTRF,
+		SpecVersion:  SpecVersionCTRF,
+		ReportId:     uuid.New().String(),
+		Timestamp:    time.Now(),
 		Results: &Results{
 			Tool:        &Tool{Name: toolName},
 			Environment: env,
 			Summary:     &Summary{},
 		},
+		GeneratedBy: GeneratedByDefault,
 	}
 }
 
