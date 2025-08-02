@@ -146,6 +146,57 @@ The test object in the report includes the following [CTRF properties](https://c
 
 When running go-ctrf-json-reporter results in a "command not found" error this usually means that the Go bin directory is not in your system's PATH.
 
+## Development
+
+Contributions are welcome! See [Contributing](CONTRIBUTING.md) for more information.
+
+### Build the binary
+
+```bash
+go build -o go-ctrf-json-reporter ./cmd/go-ctrf-json-reporter
+```
+
+### Running Tests
+
+```bash
+go test ./...
+```
+
+### Testing the Reporter
+
+```bash
+go test -json ./... | ./go-ctrf-json-reporter -output ctrf-report.json
+
+cat ctrf-report.json
+```
+
+### Development Workflow
+
+1. Make changes to the code
+2. Run tests: `go test ./...`
+3. Test the reporter: `go test -json ./... | ./go-ctrf-json-reporter -output test-results.json`
+4. Check the generated CTRF report: `cat test-results.json`
+
+### Troubleshooting
+
+If you encounter issues with test execution, ensure your Go environment is set correctly for your platform:
+
+```bash
+# Check your Go environment
+go env GOOS GOARCH
+
+# Set for your platform if needed
+export GOOS=darwin GOARCH=arm64  # For macOS ARM64
+export GOOS=linux GOARCH=amd64   # For Linux x86_64
+export GOOS=windows GOARCH=amd64 # For Windows x86_64
+```
+
+Make sure the binary is executable:
+
+```bash
+chmod +x go-ctrf-json-reporter
+```
+
 ## What is CTRF?
 
 CTRF is a universal JSON test report schema that addresses the lack of a standardized format for JSON test reports.
