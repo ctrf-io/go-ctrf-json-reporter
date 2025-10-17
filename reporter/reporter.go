@@ -184,8 +184,6 @@ func getMessagesForTest(testEvents []TestEvent, index int, packageName, testName
 			if testEvents[i].Action == "output" {
 				messages = append(messages, testEvents[i].Output)
 			}
-		} else {
-			break
 		}
 	}
 	reverse(messages)
