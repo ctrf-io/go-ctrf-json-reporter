@@ -3,9 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
+
 	"github.com/ctrf-io/go-ctrf-json-reporter/ctrf"
 	"github.com/ctrf-io/go-ctrf-json-reporter/reporter"
-	"os"
 )
 
 var buildFailed bool
@@ -86,7 +87,14 @@ func main() {
 	}
 
 	if report.Results.Extra != nil {
-		extraMap := report.Results.Extra.(map[string]interface{})
+		extraMap, isMap := report.Results.Extra.(map[string]any)
+		if !isMap {
+			err = fmt.Errorf("expected a map, but got %T instead", report.Results.Extra)
+			if !quiet {
+				_, _ = fmt.Fprintf(os.Stderr, "Error writing the report to file: %v\n", err)
+			}
+			os.Exit(1)
+		}
 		if _, ok := extraMap["buildFail"]; ok {
 			buildFailed = true
 		}

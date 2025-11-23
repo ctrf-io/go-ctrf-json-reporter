@@ -52,9 +52,12 @@ func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment) (*ctrf.R
 
 		if event.Action == "build-output" || event.Action == "build-fail" || event.Action == "fail" {
 			if report.Results.Extra == nil {
-				report.Results.Extra = make(map[string]interface{})
+				report.Results.Extra = make(map[string]any)
 			}
-			extraMap := report.Results.Extra.(map[string]interface{})
+			extraMap, ok := report.Results.Extra.(map[string]any)
+			if !ok {
+				return nil, fmt.Errorf("expected a map, but got %T instead", report.Results.Extra)
+			}
 
 			if event.Action == "fail" {
 				if _, ok := extraMap["FailedBuild"]; !ok {

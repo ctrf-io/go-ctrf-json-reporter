@@ -115,11 +115,13 @@ func TestRequiredProperties(t *testing.T) {
 	}
 
 	// Assert
-	assert.Equal(t, expectedJson, actualJson)
+	assert.JSONEq(t, expectedJson, actualJson)
 }
 
 func TestValidation(t *testing.T) {
 	forEachValidationTestCase(t, allTestCase, func(t *testing.T, testCase validationTestCase, report *Report) {
+		t.Helper()
+
 		errs := report.Validate()
 		if len(testCase.ExpectedErrors) == 0 {
 			assert.Nil(t, errs)
@@ -136,6 +138,8 @@ func TestValidation(t *testing.T) {
 
 func TestWriteFailsForInvalidReport(t *testing.T) {
 	forEachValidationTestCase(t, failingTestCase, func(t *testing.T, testCase validationTestCase, report *Report) {
+		t.Helper()
+
 		err := report.Write(os.Stdout, true)
 		assert.Error(t, err, "report is invalid")
 	})
@@ -143,6 +147,8 @@ func TestWriteFailsForInvalidReport(t *testing.T) {
 
 func TestWriteFileFailsForInvalidReport(t *testing.T) {
 	forEachValidationTestCase(t, failingTestCase, func(t *testing.T, testCase validationTestCase, report *Report) {
+		t.Helper()
+
 		err := report.WriteFile("report.json")
 		assert.Error(t, err, "report is invalid")
 	})
@@ -150,6 +156,8 @@ func TestWriteFileFailsForInvalidReport(t *testing.T) {
 
 func TestToJsonFailsForInvalidReport(t *testing.T) {
 	forEachValidationTestCase(t, failingTestCase, func(t *testing.T, testCase validationTestCase, report *Report) {
+		t.Helper()
+
 		_, err := report.ToJson()
 		assert.Error(t, err, "report is invalid")
 	})
@@ -157,12 +165,16 @@ func TestToJsonFailsForInvalidReport(t *testing.T) {
 
 func TestToJsonPrettyFailsForInvalidReport(t *testing.T) {
 	forEachValidationTestCase(t, failingTestCase, func(t *testing.T, testCase validationTestCase, report *Report) {
+		t.Helper()
+
 		_, err := report.ToJsonPretty()
 		assert.Error(t, err, "report is invalid")
 	})
 }
 
 func forEachValidationTestCase(t *testing.T, testCaseFilter func(validationTestCase) bool, test func(*testing.T, validationTestCase, *Report)) {
+	t.Helper()
+
 	data, err := os.ReadFile("validation-test-cases.yaml")
 	if err != nil {
 		t.Fatal(err)
