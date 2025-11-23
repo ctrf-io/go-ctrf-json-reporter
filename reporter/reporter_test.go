@@ -7,6 +7,7 @@ import (
 	"github.com/ctrf-io/go-ctrf-json-reporter/ctrf"
 	"github.com/ctrf-io/go-ctrf-json-reporter/reporter"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_Enrich_Reporter(t *testing.T) {
@@ -29,7 +30,7 @@ func Test_Enrich_Reporter(t *testing.T) {
 
 	actual, err := reporter.ParseTestResults(bytes.NewBufferString(input), false, &ctrf.Environment{})
 
-	assert.Nil(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, expected.Results.Tests, actual.Results.Tests)
 }
 
@@ -122,6 +123,6 @@ func Test_Enrich_ReporterWithUnorderedMessages(t *testing.T) {
 
 	actual, err := reporter.ParseTestResults(bytes.NewBufferString(input), false, &ctrf.Environment{})
 
-	assert.Nil(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, expected.Results.Tests, actual.Results.Tests)
 }
