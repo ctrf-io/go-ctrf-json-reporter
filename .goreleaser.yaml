@@ -1,0 +1,59 @@
+# configuration reference: https://goreleaser.com/customization
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - 
+    binary: go-ctrf-json-reporter
+    main: ./cmd/go-ctrf-json-reporter
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm
+      - arm64
+    ignore:
+      - goos: windows
+        goarch: arm
+      - goos: windows
+        goarch: arm64
+
+upx:
+  - enabled: true
+
+archives:
+  - formats: [tar.gz]
+    # this name template makes the OS and Arch compatible with the results of `uname`.
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+    # use zip for windows archives
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+
+checksum:
+  name_template: 'checksums.txt'
+
+release:
+  github:
+    owner: ctrf-io
+    name: go-ctrf-json-reporter
+  draft: true
+  replace_existing_draft: true
+  prerelease: auto
+  mode: replace
+
+changelog:
+  use: github-native
