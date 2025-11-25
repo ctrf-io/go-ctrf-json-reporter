@@ -37,6 +37,9 @@ func TestExecute(t *testing.T) {
 		t.Run("should parse go test json data", func(t *testing.T) {
 			fixture, err := os.Open(filepath.Join("testdata", "test.json"))
 			require.NoError(t, err)
+			defer func() {
+				_ = fixture.Close()
+			}()
 
 			var stdout bytes.Buffer
 			ctx := freshContext(&stdout, fixture)
@@ -66,6 +69,9 @@ func TestExecute(t *testing.T) {
 		t.Run("should parse go test json data", func(t *testing.T) {
 			fixture, err := os.Open(filepath.Join("testdata", "test.json"))
 			require.NoError(t, err)
+			defer func() {
+				_ = fixture.Close()
+			}()
 			output := filepath.Join(tempDir, "test-report-app.json")
 
 			ctx := freshContext(nil, fixture)
@@ -103,7 +109,10 @@ func TestExecute(t *testing.T) {
 		t.Run("should parse go test json data", func(t *testing.T) {
 			fixture, err := os.Open(filepath.Join("testdata", "test.json"))
 			require.NoError(t, err)
-			output := filepath.Join(tempDir, "test-report-app.json")
+			defer func() {
+				_ = fixture.Close()
+			}()
+			output := filepath.Join(tempDir, "test-report-verbose.json")
 
 			ctx := freshContext(nil, fixture)
 			ctx.verbose = true

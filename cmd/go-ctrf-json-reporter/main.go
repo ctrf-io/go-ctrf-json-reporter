@@ -37,7 +37,7 @@ type commandFlags struct {
 }
 
 // NOTE(fredbi)
-// Sugggestions (future enhancements):
+// Suggestions (future enhancements):
 //
 //   - outputFile could be provided as an io.Writer: this makes the package easier to test
 //   - outputFile is currently required but could default to stdout
@@ -76,7 +76,7 @@ func execute(cmd *commandContext) error {
 		return fmt.Errorf("error writing the report to file: %w", err)
 	}
 
-	if !cmd.verbose && !cmd.quiet { // when verbose is enabled, we already got some output
+	if !cmd.verbose && !cmd.quiet { // when verbose is enabled, output is already written during parsing
 		buildOutput := reporter.GetBuildOutput()
 		fmt.Fprint(cmd.writer, buildOutput)
 	}
@@ -86,7 +86,7 @@ func execute(cmd *commandContext) error {
 		extraMap, isMap := report.Results.Extra.(map[string]any)
 		if !isMap {
 			err = fmt.Errorf("expected a map, but got %T instead", report.Results.Extra)
-			return fmt.Errorf("error writing the report to file: %w", err)
+			return fmt.Errorf("error extracting report results: %w", err)
 		}
 		if _, ok := extraMap["buildFail"]; ok {
 			buildFailed = true
