@@ -1,99 +1,92 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
+	"io"
+	"log"
 	"os"
 
 	"github.com/ctrf-io/go-ctrf-json-reporter/ctrf"
 	"github.com/ctrf-io/go-ctrf-json-reporter/reporter"
 )
 
-var buildFailed bool
+// commandContext holds the global context of the command.
+//
+// For now, this boils down to just CLI flags and default stdin/stdout.
+type commandContext struct {
+	commandFlags
+
+	reader io.Reader
+	writer io.Writer // makes it easier to test execute() independently
+}
+
+// commandFlags stores parsed command line flags.
+type commandFlags struct {
+	outputFile  string
+	verbose     bool
+	quiet       bool
+	appName     string
+	appVersion  string
+	oSPlatform  string
+	oSRelease   string
+	oSVersion   string
+	buildName   string
+	buildNumber string
+}
+
+// NOTE(fredbi)
+// Suggestions (future enhancements):
+//
+//   - outputFile could be provided as an io.Writer: this makes the package easier to test
+//   - outputFile is currently required but could default to stdout
+//   - outputFile set to "-" would also mean stdout (common with unix-like tools)
+//
+// A similar approach could work for stdin, which is currently not an option, when CLI args (not flags)
+// could represent the input files (e.g. could be useful when used with xargs for example).
 
 func main() {
-	var outputFile string
-	var verbose bool
-	var quiet bool
-	flag.BoolVar(&verbose, "verbose", false, "Enable verbose output")
-	flag.BoolVar(&verbose, "v", false, "Enable verbose output (shorthand)")
-	flag.BoolVar(&quiet, "quiet", false, "Disable all log output")
-	flag.BoolVar(&quiet, "q", false, "Disable all log output (shorthand)")
-	flag.StringVar(&outputFile, "output", "ctrf-report.json", "The output file for the test results")
-	flag.StringVar(&outputFile, "o", "ctrf-report.json", "The output file for the test results (shorthand)")
+	var ctx commandContext
+	ctx.reader = os.Stdin
+	ctx.writer = os.Stdout
 
-	var tempAppName, tempAppVersion, tempOSPlatform, tempOSRelease, tempOSVersion, tempBuildName, tempBuildNumber string
+	registerFlags(&ctx.commandFlags)
 
-	flag.StringVar(&tempAppName, "appName", "", "The name of the application being tested.")
-	flag.StringVar(&tempAppVersion, "appVersion", "", "The version of the application being tested.")
-	flag.StringVar(&tempOSPlatform, "osPlatform", "", "The operating system platform (e.g., Windows, Linux).")
-	flag.StringVar(&tempOSRelease, "osRelease", "", "The release version of the operating system.")
-	flag.StringVar(&tempOSVersion, "osVersion", "", "The version number of the operating system.")
-	flag.StringVar(&tempBuildName, "buildName", "", "The name of the build (e.g., feature branch name).")
-	flag.StringVar(&tempBuildNumber, "buildNumber", "", "The build number or identifier.")
+	if err := execute(&ctx); err != nil {
+		if ctx.quiet {
+			os.Exit(1) // exit silently
+		}
 
-	flag.Parse()
-
-	var env *ctrf.Environment
-
-	if tempAppName != "" || tempAppVersion != "" || tempOSPlatform != "" ||
-		tempOSRelease != "" || tempOSVersion != "" || tempBuildName != "" || tempBuildNumber != "" {
-		env = &ctrf.Environment{}
-
-		if tempAppName != "" {
-			env.AppName = tempAppName
-		}
-		if tempAppVersion != "" {
-			env.AppVersion = tempAppVersion
-		}
-		if tempOSPlatform != "" {
-			env.OSPlatform = tempOSPlatform
-		}
-		if tempOSRelease != "" {
-			env.OSRelease = tempOSRelease
-		}
-		if tempOSVersion != "" {
-			env.OSVersion = tempOSVersion
-		}
-		if tempBuildName != "" {
-			env.BuildName = tempBuildName
-		}
-		if tempBuildNumber != "" {
-			env.BuildNumber = tempBuildNumber
-		}
+		log.Fatalf("%v", err)
 	}
+}
 
-	effectiveVerbose := verbose && !quiet
+func execute(cmd *commandContext) error {
+	env := ctrfEnvFromFlags(cmd)
+	effectiveVerbose := cmd.verbose && !cmd.quiet
 
-	report, err := reporter.ParseTestResults(os.Stdin, effectiveVerbose, env)
+	report, err := reporter.ParseTestResults(cmd.reader, effectiveVerbose, env)
 	if err != nil {
-		if !quiet {
-			_, _ = fmt.Fprintf(os.Stderr, "Error parsing test results: %v\n", err)
-		}
-		os.Exit(1)
+		return fmt.Errorf("error parsing test results: %w", err)
 	}
 
-	err = reporter.WriteReportToFile(outputFile, report)
+	err = reporter.WriteReportToFile(cmd.outputFile, report)
 	if err != nil {
-		if !quiet {
-			_, _ = fmt.Fprintf(os.Stderr, "Error writing the report to file: %v\n", err)
-		}
-		os.Exit(1)
+		return fmt.Errorf("error writing the report to file: %w", err)
 	}
 
-	if !verbose && !quiet {
+	if !cmd.verbose && !cmd.quiet { // when verbose is enabled, output is already written during parsing
 		buildOutput := reporter.GetBuildOutput()
-		fmt.Println(buildOutput)
+		fmt.Fprint(cmd.writer, buildOutput)
 	}
 
+	var buildFailed bool
 	if report.Results.Extra != nil {
 		extraMap, isMap := report.Results.Extra.(map[string]any)
 		if !isMap {
 			err = fmt.Errorf("expected a map, but got %T instead", report.Results.Extra)
-			if !quiet {
-				_, _ = fmt.Fprintf(os.Stderr, "Error writing the report to file: %v\n", err)
-			}
-			os.Exit(1)
+			return fmt.Errorf("error extracting report results: %w", err)
 		}
 		if _, ok := extraMap["buildFail"]; ok {
 			buildFailed = true
@@ -108,6 +101,47 @@ func main() {
 	}
 
 	if buildFailed {
-		os.Exit(1)
+		return errors.New("build failed")
+	}
+
+	return nil
+}
+
+func registerFlags(flags *commandFlags) {
+	flag.BoolVar(&flags.verbose, "verbose", false, "Enable verbose output")
+	flag.BoolVar(&flags.verbose, "v", false, "Enable verbose output (shorthand)")
+	flag.BoolVar(&flags.quiet, "quiet", false, "Disable all log output")
+	flag.BoolVar(&flags.quiet, "q", false, "Disable all log output (shorthand)")
+
+	flag.StringVar(&flags.outputFile, "output", "ctrf-report.json", "The output file for the test results")
+	flag.StringVar(&flags.outputFile, "o", "ctrf-report.json", "The output file for the test results (shorthand)")
+
+	flag.StringVar(&flags.appName, "appName", "", "The name of the application being tested.")
+	flag.StringVar(&flags.appVersion, "appVersion", "", "The version of the application being tested.")
+	flag.StringVar(&flags.oSPlatform, "osPlatform", "", "The operating system platform (e.g., Windows, Linux).")
+	flag.StringVar(&flags.oSRelease, "osRelease", "", "The release version of the operating system.")
+	flag.StringVar(&flags.oSVersion, "osVersion", "", "The version number of the operating system.")
+	flag.StringVar(&flags.buildName, "buildName", "", "The name of the build (e.g., feature branch name).")
+	flag.StringVar(&flags.buildNumber, "buildNumber", "", "The build number or identifier.")
+
+	// parsing errors result in os.Exit(1). Perhaps we should call the flagset version and capture the error instead.
+	flag.Parse()
+}
+
+func ctrfEnvFromFlags(cmd *commandContext) *ctrf.Environment {
+	if cmd.appName == "" && cmd.appVersion == "" && cmd.oSPlatform == "" &&
+		cmd.oSRelease == "" && cmd.oSVersion == "" && cmd.buildName == "" &&
+		cmd.buildNumber == "" {
+		return nil
+	}
+
+	return &ctrf.Environment{
+		AppName:     cmd.appName,
+		AppVersion:  cmd.appVersion,
+		OSPlatform:  cmd.oSPlatform,
+		OSRelease:   cmd.oSRelease,
+		OSVersion:   cmd.oSVersion,
+		BuildName:   cmd.buildName,
+		BuildNumber: cmd.buildNumber,
 	}
 }
