@@ -23,6 +23,16 @@ type TestEvent struct {
 	Output  string
 }
 
+const (
+	ActionBuildOutput = "build-output"
+	ActionBuildFail   = "build-fail"
+	ActionOutput      = "output"
+	ActionRun         = "run"
+	ActionPass        = "pass"
+	ActionFail        = "fail"
+	ActionSkip        = "skip"
+)
+
 var buildOutput []string
 
 func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment) (*ctrf.Report, error) {
@@ -33,6 +43,11 @@ func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment) (*ctrf.R
 	report.Results.Summary.Start = time.Now().UnixNano() / int64(time.Millisecond)
 
 	testStartTimes := make(map[string]int64)
+	extraMap := make(map[string]any)
+	buildOutputEvents := make([]TestEvent, 0)
+	buildFailEvents := make([]TestEvent, 0)
+
+	report.Results.Extra = extraMap
 
 	for {
 		var event TestEvent
@@ -44,56 +59,45 @@ func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment) (*ctrf.R
 		testEvents = append(testEvents, event)
 
 		if verbose {
-			if event.Action == "build-output" || event.Action == "output" {
+			if event.Action == ActionBuildOutput || event.Action == ActionOutput {
 				fmt.Print(event.Output)
 			}
 		}
 	}
 
 	for i, event := range testEvents {
-
-		if event.Action == "build-output" || event.Action == "build-fail" || event.Action == "fail" {
-			if report.Results.Extra == nil {
-				report.Results.Extra = make(map[string]any)
-			}
-			extraMap, ok := report.Results.Extra.(map[string]any)
-			if !ok {
-				return nil, fmt.Errorf("expected a map, but got %T instead", report.Results.Extra)
-			}
-
-			if event.Action == "fail" {
-				if _, ok := extraMap["FailedBuild"]; !ok {
-					extraMap["FailedBuild"] = true
-				}
-			}
-
-			if event.Action == "build-output" {
-				if _, ok := extraMap["buildOutput"]; !ok {
-					extraMap["buildOutput"] = []TestEvent{}
-				}
-				buildOutputEvents := extraMap["buildOutput"].([]TestEvent)
-				extraMap["buildOutput"] = append(buildOutputEvents, event)
-				buildOutput = append(buildOutput, event.Output)
-				continue
-			}
-
-			if event.Action == "build-fail" {
-				if _, ok := extraMap["buildFail"]; !ok {
-					extraMap["buildFail"] = []TestEvent{}
-				}
-				buildFailEvents := extraMap["buildFail"].([]TestEvent)
-				extraMap["buildFail"] = append(buildFailEvents, event)
-				break
-			}
+		// If we see any test failures, mark an overall failure in the Extra fields
+		if event.Action == ActionFail {
+			extraMap["FailedBuild"] = true
 		}
 
-		if event.Action == "output" {
+		if event.Action == ActionBuildOutput {
+			// Capture the full events to the extras
+			buildOutputEvents = append(buildOutputEvents, event)
+			extraMap["buildOutput"] = buildOutputEvents
+
+			// Capture the actual build output as well
+			buildOutput = append(buildOutput, event.Output)
+			continue
+		}
+
+		// Mark if we see a build failure in the extras field
+		if event.Action == ActionBuildFail {
+			buildFailEvents = append(buildFailEvents, event)
+			extraMap["buildFail"] = buildFailEvents
+			break
+		}
+
+		if event.Action == ActionOutput {
 			buildOutput = append(buildOutput, event.Output)
 		}
 
+		// From this point, we only care about events associated with an actual test
 		if event.Test == "" {
 			continue
 		}
+
+		// Parse timestamp data from the event
 		eventTime, err := parseTimeString(event.Time)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error parsing test event start time '%s' : %v\n", event.Time, err)
@@ -107,14 +111,14 @@ func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment) (*ctrf.R
 
 			// If this is a "run" event, record the start time of the test. We'll look this up later when
 			// we process the "pass"/"fail"/"skip" event for the test to create the TestResult
-			if event.Action == "run" {
+			if event.Action == ActionRun {
 				testStartTimes[testNameKey(event.Package, event.Test)] = eventTime
 			}
 		}
 
 		// From this point on, we only deal with pass, fail, and skip events, which indicate that the
 		// test has completed, and we can create/update a TestResult for it.
-		if event.Action == "pass" || event.Action == "fail" || event.Action == "skip" {
+		if event.Action == ActionPass || event.Action == ActionFail || event.Action == ActionSkip {
 			// Look up the start time, and use this event's time as the endTime, to mark the start/stop times
 			// for the test result. Duration we get from the event.Elapsed field, which better takes into
 			// account parallel tests, setup/teardown time, etc...
@@ -127,7 +131,7 @@ func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment) (*ctrf.R
 			// Determine the message for this test result. We only include messages on failures though,
 			// per the CTRF spec, so if this is not a failure, we pass an empty string for the message.
 			message := ""
-			if event.Action == "fail" {
+			if event.Action == ActionFail {
 				message = getMessagesForTest(testEvents, i, event.Package, event.Test, startTime)
 			}
 
@@ -158,7 +162,7 @@ func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment) (*ctrf.R
 	return report, nil
 }
 
-// addResult adds a new test result to the report, filling out all the relevant details
+// addResult adds a new test result to the report, filling out all the relevant details.
 func addResult(report *ctrf.Report, result *ctrf.TestResult) {
 	// Update the overall test count in the Summary
 	report.Results.Summary.Tests++
@@ -171,59 +175,63 @@ func addResult(report *ctrf.Report, result *ctrf.TestResult) {
 		report.Results.Summary.Failed++
 	case ctrf.TestSkipped:
 		report.Results.Summary.Skipped++
+	case ctrf.TestPending:
+		report.Results.Summary.Pending++
+	default:
+		report.Results.Summary.Other++
 	}
 
 	// Append the result to the report's results
 	report.Results.Tests = append(report.Results.Tests, result)
 }
 
-func updateResult(report *ctrf.Report, existing, new *ctrf.TestResult) {
+func updateResult(report *ctrf.Report, oldResult, newResult *ctrf.TestResult) {
 	// If the existing result does not have a retries field, initialize it, and move the
 	// results to the first RetryAttempts object
-	if existing.RetryAttempts == nil {
-		existing.Retries = 1
-		existing.RetryAttempts = append(existing.RetryAttempts, ctrf.RetryAttempt{
+	if oldResult.RetryAttempts == nil {
+		oldResult.Retries = 1
+		oldResult.RetryAttempts = append(oldResult.RetryAttempts, ctrf.RetryAttempt{
 			Attempt:  1,
-			Status:   existing.Status,
-			Message:  existing.Message,
-			Duration: existing.Duration,
-			Start:    existing.Start,
-			Stop:     existing.Stop,
+			Status:   oldResult.Status,
+			Message:  oldResult.Message,
+			Duration: oldResult.Duration,
+			Start:    oldResult.Start,
+			Stop:     oldResult.Stop,
 		})
 	}
 
 	// If this is a pass after a failure, mark the test as flaky, not failed,
 	// and update the summary counts accordingly
-	if existing.Status == ctrf.TestFailed && new.Status == ctrf.TestPassed {
-		existing.Flaky = true
+	if oldResult.Status == ctrf.TestFailed && newResult.Status == ctrf.TestPassed {
+		oldResult.Flaky = true
 		report.Results.Summary.Flaky++
 		report.Results.Summary.Failed--
 	}
 
 	// Update the overall test status to match that of the new result
-	existing.Status = new.Status
+	oldResult.Status = newResult.Status
 
 	// Clear out the top-level message on the overall result, since the messages are in the retries
-	existing.Message = ""
+	oldResult.Message = ""
 
 	// Update the times of the overall test result
-	existing.Duration += new.Duration
-	if new.Stop > existing.Stop {
-		existing.Stop = new.Stop
+	oldResult.Duration += newResult.Duration
+	if newResult.Stop > oldResult.Stop {
+		oldResult.Stop = newResult.Stop
 	}
-	if new.Start < existing.Start {
-		existing.Start = new.Start
+	if newResult.Start < oldResult.Start {
+		oldResult.Start = newResult.Start
 	}
 
 	// Now add the new attempt to the retries
-	existing.Retries++
-	existing.RetryAttempts = append(existing.RetryAttempts, ctrf.RetryAttempt{
-		Attempt:  existing.Retries,
-		Status:   new.Status,
-		Message:  new.Message,
-		Duration: new.Duration,
-		Start:    new.Start,
-		Stop:     new.Stop,
+	oldResult.Retries++
+	oldResult.RetryAttempts = append(oldResult.RetryAttempts, ctrf.RetryAttempt{
+		Attempt:  oldResult.Retries,
+		Status:   newResult.Status,
+		Message:  newResult.Message,
+		Duration: newResult.Duration,
+		Start:    newResult.Start,
+		Stop:     newResult.Stop,
 	})
 }
 
@@ -234,11 +242,11 @@ func testNameKey(suite, name string) string {
 
 func actionToTestResult(action string) ctrf.TestStatus {
 	switch action {
-	case "pass":
+	case ActionPass:
 		return ctrf.TestPassed
-	case "fail":
+	case ActionFail:
 		return ctrf.TestFailed
-	case "skip":
+	case ActionSkip:
 		return ctrf.TestSkipped
 	default:
 		return ctrf.TestOther
@@ -310,7 +318,7 @@ func getMessagesForTest(testEvents []TestEvent, index int, packageName, testName
 				}
 			}
 
-			if testEvents[i].Action == "output" {
+			if testEvents[i].Action == ActionOutput {
 				messages = append(messages, testEvents[i].Output)
 			}
 		}

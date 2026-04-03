@@ -21,6 +21,8 @@ func Test_Enrich_Reporter(t *testing.T) {
 			Stop:     1740874081832,
 		},
 	}}}
+
+	//nolint:lll // The test inputs are raw strings taken from real test runs
 	input := `{"Time":"2025-03-02T01:08:01.832222033+01:00","Action":"start","Package":"github.com/ctrf-io/go-ctrf-json-reporter/reporter"}
 {"Time":"2025-03-02T01:08:01.832309292+01:00","Action":"run","Package":"github.com/ctrf-io/go-ctrf-json-reporter/reporter","Test":"Test_Enrich_Reporter"}
 {"Time":"2025-03-02T01:08:01.832321979+01:00","Action":"output","Package":"github.com/ctrf-io/go-ctrf-json-reporter/reporter","Test":"Test_Enrich_Reporter","Output":"=== RUN   Test_Enrich_Reporter\n"}
@@ -105,6 +107,8 @@ func Test_Enrich_ReporterWithUnorderedMessages(t *testing.T) {
 			Stop:     1760718477126,
 		},
 	}}}
+
+	//nolint:lll // The test inputs are raw strings taken from real test runs
 	input := `{"Time":"2025-10-17T12:27:57.126761-04:00","Action":"run","Package":"github.com/ctrf-io/go-ctrf-json-reporter/reporter","Test":"Test_Enrich_Reporter"}
 {"Time":"2025-10-17T12:27:57.126764-04:00","Action":"output","Package":"github.com/ctrf-io/go-ctrf-json-reporter/reporter","Test":"Test_Enrich_Reporter","Output":"=== RUN   Test_Enrich_Reporter\n"}
 {"Time":"2025-10-17T12:27:57.126769-04:00","Action":"run","Package":"github.com/ctrf-io/go-ctrf-json-reporter/reporter","Test":"Test_Enrich_Reporter/Test1"}
@@ -156,6 +160,9 @@ func TestDetectFlakyTests(t *testing.T) {
 			Start:   1775245677812, // The event timestamp of the first processed event
 			Stop:    1775245679646, // The event timestamp of the last processed event
 		},
+		Extra: map[string]any{
+			"FailedBuild": true,
+		},
 		Tests: []*ctrf.TestResult{
 			{
 				Name:     "Test_Flaky_Pass",
@@ -177,12 +184,18 @@ func TestDetectFlakyTests(t *testing.T) {
 				Duration: 150,
 				Message:  "",
 				RetryAttempts: []ctrf.RetryAttempt{
-					{Attempt: 1, Status: ctrf.TestFailed, Start: 1775245677863, Stop: 1775245677914, Duration: 50,
-						Message: "=== RUN   Test_Flaky_Fail\n    flaky_test.go:21: This test is designed to fail.\n--- FAIL: Test_Flaky_Fail (0.05s)\n"},
-					{Attempt: 2, Status: ctrf.TestFailed, Start: 1775245678350, Stop: 1775245678401, Duration: 50,
-						Message: "=== RUN   Test_Flaky_Fail\n    flaky_test.go:21: This test is designed to fail.\n--- FAIL: Test_Flaky_Fail (0.05s)\n"},
-					{Attempt: 3, Status: ctrf.TestFailed, Start: 1775245679196, Stop: 1775245679247, Duration: 50,
-						Message: "=== RUN   Test_Flaky_Fail\n    flaky_test.go:21: This test is designed to fail.\n--- FAIL: Test_Flaky_Fail (0.05s)\n"},
+					{
+						Attempt: 1, Status: ctrf.TestFailed, Start: 1775245677863, Stop: 1775245677914, Duration: 50,
+						Message: "=== RUN   Test_Flaky_Fail\n    flaky_test.go:21: This test is designed to fail.\n--- FAIL: Test_Flaky_Fail (0.05s)\n",
+					},
+					{
+						Attempt: 2, Status: ctrf.TestFailed, Start: 1775245678350, Stop: 1775245678401, Duration: 50,
+						Message: "=== RUN   Test_Flaky_Fail\n    flaky_test.go:21: This test is designed to fail.\n--- FAIL: Test_Flaky_Fail (0.05s)\n",
+					},
+					{
+						Attempt: 3, Status: ctrf.TestFailed, Start: 1775245679196, Stop: 1775245679247, Duration: 50,
+						Message: "=== RUN   Test_Flaky_Fail\n    flaky_test.go:21: This test is designed to fail.\n--- FAIL: Test_Flaky_Fail (0.05s)\n",
+					},
 				},
 			},
 			{
@@ -204,15 +217,21 @@ func TestDetectFlakyTests(t *testing.T) {
 				Start:    1775245677914,
 				Stop:     1775245679646,
 				RetryAttempts: []ctrf.RetryAttempt{
-					{Attempt: 1, Status: ctrf.TestFailed, Duration: 50, Start: 1775245677914, Stop: 1775245677967,
-						Message: "=== RUN   Test_Flaky_Flaky\n    flaky_test.go:37: Flaky Failure (attempt 1)\n--- FAIL: Test_Flaky_Flaky (0.05s)\n"},
-					{Attempt: 2, Status: ctrf.TestFailed, Duration: 50, Start: 1775245678784, Stop: 1775245678837,
-						Message: "=== RUN   Test_Flaky_Flaky\n    flaky_test.go:54: Flaky Failure (attempt 2)\n--- FAIL: Test_Flaky_Flaky (0.05s)\n"},
+					{
+						Attempt: 1, Status: ctrf.TestFailed, Duration: 50, Start: 1775245677914, Stop: 1775245677967,
+						Message: "=== RUN   Test_Flaky_Flaky\n    flaky_test.go:37: Flaky Failure (attempt 1)\n--- FAIL: Test_Flaky_Flaky (0.05s)\n",
+					},
+					{
+						Attempt: 2, Status: ctrf.TestFailed, Duration: 50, Start: 1775245678784, Stop: 1775245678837,
+						Message: "=== RUN   Test_Flaky_Flaky\n    flaky_test.go:54: Flaky Failure (attempt 2)\n--- FAIL: Test_Flaky_Flaky (0.05s)\n",
+					},
 					{Attempt: 3, Status: ctrf.TestPassed, Duration: 50, Start: 1775245679595, Stop: 1775245679646},
 				},
 			},
-		}}}
+		},
+	}}
 
+	//nolint:lll // The test inputs are raw strings taken from real test runs
 	input := `{"Time":"2026-04-03T13:47:57.561046-06:00","Action":"start","Package":"github.com/ctrf-io/go-ctrf-json-reporter/examples/flaky"}
 {"Time":"2026-04-03T13:47:57.812415-06:00","Action":"run","Package":"github.com/ctrf-io/go-ctrf-json-reporter/examples/flaky","Test":"Test_Flaky_Pass"}
 {"Time":"2026-04-03T13:47:57.812541-06:00","Action":"output","Package":"github.com/ctrf-io/go-ctrf-json-reporter/examples/flaky","Test":"Test_Flaky_Pass","Output":"=== RUN   Test_Flaky_Pass\n"}
@@ -277,4 +296,5 @@ func TestDetectFlakyTests(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, expected.Results.Summary, actual.Results.Summary)
 	assert.Equal(t, expected.Results.Tests, actual.Results.Tests)
+	assert.Equal(t, expected.Results.Extra, actual.Results.Extra)
 }

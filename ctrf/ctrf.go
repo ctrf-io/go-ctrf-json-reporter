@@ -192,7 +192,6 @@ func (summary *Summary) Validate() []error {
 	testsSum := summary.Passed + summary.Failed + summary.Pending + summary.Skipped + summary.Other + summary.Flaky
 	if summary.Tests != testsSum {
 		errs = append(errs, fmt.Errorf("invalid summary counts: tests (%d) must be the sum of passed, failed, pending, skipped, and other (%d)", summary.Tests, testsSum))
-
 	}
 	return errs
 }
