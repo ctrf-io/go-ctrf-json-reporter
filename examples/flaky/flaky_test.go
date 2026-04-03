@@ -1,6 +1,6 @@
 //go:build examples
 
-package fake
+package flaky
 
 import (
 	"errors"
