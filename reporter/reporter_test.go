@@ -15,7 +15,7 @@ func Test_Enrich_Reporter(t *testing.T) {
 		{
 			Name:     "Test_Enrich_Reporter",
 			Status:   "passed",
-			Suite:    "github.com/ctrf-io/go-ctrf-json-reporter/reporter",
+			Suite:    []string{"github.com/ctrf-io/go-ctrf-json-reporter/reporter"},
 			Filepath: "reporter_test.go",
 			Start:    1740874081832,
 			Stop:     1740874081832,
@@ -43,7 +43,7 @@ func Test_Enrich_ReporterWithUnorderedMessages(t *testing.T) {
 		{
 			Name:     "Test_Enrich_Reporter/Test1",
 			Status:   "passed",
-			Suite:    "github.com/ctrf-io/go-ctrf-json-reporter/reporter",
+			Suite:    []string{"github.com/ctrf-io/go-ctrf-json-reporter/reporter"},
 			Filepath: "reporter_test.go",
 			Start:    1760718477126,
 			Stop:     1760718477126,
@@ -51,7 +51,7 @@ func Test_Enrich_ReporterWithUnorderedMessages(t *testing.T) {
 		{
 			Name:     "Test_Enrich_Reporter/Test2",
 			Status:   "passed",
-			Suite:    "github.com/ctrf-io/go-ctrf-json-reporter/reporter",
+			Suite:    []string{"github.com/ctrf-io/go-ctrf-json-reporter/reporter"},
 			Filepath: "reporter_test.go",
 			Start:    1760718477126,
 			Stop:     1760718477126,
@@ -59,7 +59,7 @@ func Test_Enrich_ReporterWithUnorderedMessages(t *testing.T) {
 		{
 			Name:     "Test_Enrich_Reporter/Test3",
 			Status:   "passed",
-			Suite:    "github.com/ctrf-io/go-ctrf-json-reporter/reporter",
+			Suite:    []string{"github.com/ctrf-io/go-ctrf-json-reporter/reporter"},
 			Filepath: "reporter_test.go",
 			Start:    1760718477126,
 			Stop:     1760718477126,
@@ -67,7 +67,7 @@ func Test_Enrich_ReporterWithUnorderedMessages(t *testing.T) {
 		{
 			Name:     "Test_Enrich_Reporter/Test4",
 			Status:   "passed",
-			Suite:    "github.com/ctrf-io/go-ctrf-json-reporter/reporter",
+			Suite:    []string{"github.com/ctrf-io/go-ctrf-json-reporter/reporter"},
 			Filepath: "reporter_test.go",
 			Start:    1760718477126,
 			Stop:     1760718477126,
@@ -75,7 +75,7 @@ func Test_Enrich_ReporterWithUnorderedMessages(t *testing.T) {
 		{
 			Name:     "Test_Enrich_Reporter/Test5",
 			Status:   "failed",
-			Suite:    "github.com/ctrf-io/go-ctrf-json-reporter/reporter",
+			Suite:    []string{"github.com/ctrf-io/go-ctrf-json-reporter/reporter"},
 			Filepath: "reporter_test.go",
 			Message:  "=== RUN   Test_Enrich_Reporter/Test5\n    reporter:59: Something.Skip() = false, want true\n    --- FAIL: Test_Enrich_Reporter/Test5 (0.00s)\n",
 			Start:    1760718477126,
@@ -84,7 +84,7 @@ func Test_Enrich_ReporterWithUnorderedMessages(t *testing.T) {
 		{
 			Name:     "Test_Enrich_Reporter/Test6",
 			Status:   "passed",
-			Suite:    "github.com/ctrf-io/go-ctrf-json-reporter/reporter",
+			Suite:    []string{"github.com/ctrf-io/go-ctrf-json-reporter/reporter"},
 			Filepath: "reporter_test.go",
 			Start:    1760718477126,
 			Stop:     1760718477126,
@@ -92,7 +92,7 @@ func Test_Enrich_ReporterWithUnorderedMessages(t *testing.T) {
 		{
 			Name:     "Test_Enrich_Reporter/Test7",
 			Status:   "passed",
-			Suite:    "github.com/ctrf-io/go-ctrf-json-reporter/reporter",
+			Suite:    []string{"github.com/ctrf-io/go-ctrf-json-reporter/reporter"},
 			Filepath: "reporter_test.go",
 			Start:    1760718477126,
 			Stop:     1760718477126,
@@ -100,7 +100,7 @@ func Test_Enrich_ReporterWithUnorderedMessages(t *testing.T) {
 		{
 			Name:     "Test_Enrich_Reporter",
 			Status:   "failed",
-			Suite:    "github.com/ctrf-io/go-ctrf-json-reporter/reporter",
+			Suite:    []string{"github.com/ctrf-io/go-ctrf-json-reporter/reporter"},
 			Filepath: "reporter_test.go",
 			Message:  "=== RUN   Test_Enrich_Reporter\n--- FAIL: Test_Enrich_Reporter (0.00s)\n",
 			Start:    1760718477126,
@@ -167,7 +167,7 @@ func TestDetectFlakyTests(t *testing.T) {
 			{
 				Name:     "Test_Flaky_Pass",
 				Status:   ctrf.TestPassed,
-				Suite:    "github.com/ctrf-io/go-ctrf-json-reporter/examples/flaky",
+				Suite:    []string{"github.com/ctrf-io/go-ctrf-json-reporter/examples/flaky"},
 				Filepath: "reporter_test.go", // Filepath enrichment is based on grepping the current path, so this file is the one that gets found
 				Start:    1775245677812,
 				Stop:     1775245677863,
@@ -176,7 +176,7 @@ func TestDetectFlakyTests(t *testing.T) {
 			{
 				Name:     "Test_Flaky_Fail",
 				Status:   ctrf.TestFailed,
-				Suite:    "github.com/ctrf-io/go-ctrf-json-reporter/examples/flaky",
+				Suite:    []string{"github.com/ctrf-io/go-ctrf-json-reporter/examples/flaky"},
 				Filepath: "reporter_test.go",
 				Retries:  3,
 				Start:    1775245677863, // The start time of the first event for the first retry
@@ -201,7 +201,7 @@ func TestDetectFlakyTests(t *testing.T) {
 			{
 				Name:     "Test_Flaky_Skipped",
 				Status:   ctrf.TestSkipped,
-				Suite:    "github.com/ctrf-io/go-ctrf-json-reporter/examples/flaky",
+				Suite:    []string{"github.com/ctrf-io/go-ctrf-json-reporter/examples/flaky"},
 				Filepath: "reporter_test.go",
 				Start:    1775245677914,
 				Stop:     1775245677914,
@@ -209,7 +209,7 @@ func TestDetectFlakyTests(t *testing.T) {
 			{
 				Name:     "Test_Flaky_Flaky",
 				Status:   ctrf.TestPassed,
-				Suite:    "github.com/ctrf-io/go-ctrf-json-reporter/examples/flaky",
+				Suite:    []string{"github.com/ctrf-io/go-ctrf-json-reporter/examples/flaky"},
 				Filepath: "reporter_test.go",
 				Retries:  3,
 				Flaky:    true,

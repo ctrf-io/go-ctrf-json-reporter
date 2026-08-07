@@ -137,7 +137,7 @@ func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment) (*ctrf.R
 
 			// Build the TestResult for this test event, and add it to the report.
 			newResult := &ctrf.TestResult{
-				Suite:    event.Package,
+				Suite:    []string{event.Package},
 				Name:     event.Test,
 				Status:   actionToTestResult(event.Action),
 				Duration: secondsToMillis(event.Elapsed),
@@ -256,7 +256,7 @@ func actionToTestResult(action string) ctrf.TestStatus {
 // findTest searches through the already-parsed test results to find a matching test.
 func findTest(suite string, name string, tests []*ctrf.TestResult) *ctrf.TestResult {
 	for _, test := range tests {
-		if test.Suite == suite && test.Name == name {
+		if len(test.Suite) == 1 && test.Suite[0] == suite && test.Name == name {
 			return test
 		}
 	}
