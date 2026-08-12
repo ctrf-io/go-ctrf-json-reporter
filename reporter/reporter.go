@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 	"time"
 
@@ -149,7 +150,7 @@ func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment) (*ctrf.R
 			// Search through the existing results for a prior run. If this is a duplicate of an existing failure,
 			// then this is likely a retry of a potentially flaky test, so update the existing test result instead
 			// of creating a new one.
-			if existingResult := findTest(event.Package, event.Test, report.Results.Tests); existingResult == nil {
+			if existingResult := findTest(newResult.Suite, newResult.Name, report.Results.Tests); existingResult == nil {
 				addResult(report, newResult)
 			} else {
 				updateResult(report, existingResult, newResult)
@@ -254,9 +255,9 @@ func actionToTestResult(action string) ctrf.TestStatus {
 }
 
 // findTest searches through the already-parsed test results to find a matching test.
-func findTest(suite string, name string, tests []*ctrf.TestResult) *ctrf.TestResult {
+func findTest(suite []string, name string, tests []*ctrf.TestResult) *ctrf.TestResult {
 	for _, test := range tests {
-		if len(test.Suite) == 1 && test.Suite[0] == suite && test.Name == name {
+		if slices.Equal(suite, test.Suite) && test.Name == name {
 			return test
 		}
 	}
