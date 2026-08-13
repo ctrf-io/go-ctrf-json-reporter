@@ -1,5 +1,8 @@
 # Go CTRF JSON format support
 
+[![Tests][test-badge]][test-url] [![Coverage][cov-badge]][cov-url]
+[![Release][release-badge]][release-url] [![License][license-badge]][license-url]
+
 ## Go JSON Reporter
 
 A Go JSON test reporter to create test reports that follow the CTRF standard.
@@ -210,3 +213,13 @@ CTRF is a universal JSON test report schema that addresses the lack of a standar
 ## Support Us
 
 If you find this project useful, consider giving it a GitHub star ⭐ It means a lot to us.
+
+<!-- badges -->
+[test-badge]: https://github.com/ctrf-io/go-ctrf-json-reporter/actions/workflows/build.yaml/badge.svg
+[test-url]: https://github.com/ctrf-io/go-ctrf-json-reporter/actions/workflows/build.yaml
+[cov-badge]: https://coveralls.io/repos/github/ctrf-io/go-ctrf-json-reporter/badge.svg?branch=main
+[cov-url]: https://coveralls.io/github/ctrf-io/go-ctrf-json-reporter?branch=main
+[release-badge]: https://badge.fury.io/gh/ctrf-io%2Fgo-ctrf-json-reporter.svg
+[release-url]: https://badge.fury.io/gh/ctrf-io%2Fgo-ctrf-json-reporter
+[license-badge]: https://img.shields.io/badge/license-MIT-orange.svg
+[license-url]: https://github.com/ctrf-io/go-ctrf-json-reporter/?tab=MIT-1-ov-file#readme
