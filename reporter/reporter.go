@@ -8,7 +8,6 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"slices"
 	"strings"
 	"time"
 
@@ -254,10 +253,22 @@ func actionToTestResult(action string) ctrf.TestStatus {
 	}
 }
 
+func sliceIsEqual(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}
+
 // findTest searches through the already-parsed test results to find a matching test.
 func findTest(suite []string, name string, tests []*ctrf.TestResult) *ctrf.TestResult {
 	for _, test := range tests {
-		if slices.Equal(suite, test.Suite) && test.Name == name {
+		if sliceIsEqual(suite, test.Suite) && test.Name == name {
 			return test
 		}
 	}
