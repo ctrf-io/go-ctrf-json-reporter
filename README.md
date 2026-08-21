@@ -135,13 +135,13 @@ func runTests(destinationReportFile string) error {
 
 The test object in the report includes the following [CTRF properties](https://ctrf.io/docs/schema/test):
 
-| Name       | Type   | Required | Details                                                                             |
-| ---------- | ------ | -------- | ----------------------------------------------------------------------------------- |
-| `name`     | String | Required | The name of the test.                                                               |
-| `status`   | String | Required | The outcome of the test. One of: `passed`, `failed`, `skipped`, `pending`, `other`. |
-| `duration` | Number | Required | The time taken for the test execution, in milliseconds.                             |
-| `message`  | String | Optional | The failure message if the test failed.                                             |
-| `suite`    | String | Required | The name of go package containing the test.                                         |
+| Name       | Type            | Required | Details                                                                             |
+| ---------- | --------------- | -------- | ------------------------------------------------------------------------------------ |
+| `name`     | String          | Required | The name of the test.                                                               |
+| `status`   | String          | Required | The outcome of the test. One of: `passed`, `failed`, `skipped`, `pending`, `other`. |
+| `duration` | Number          | Required | The time taken for the test execution, in milliseconds.                             |
+| `message`  | String          | Optional | The failure message if the test failed.                                             |
+| `suite`    | Array of String | Required | The go package containing the test, as a single-element suite hierarchy.            |
 
 ## Troubleshoot
 

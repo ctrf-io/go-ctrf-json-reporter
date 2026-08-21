@@ -137,7 +137,7 @@ func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment) (*ctrf.R
 
 			// Build the TestResult for this test event, and add it to the report.
 			newResult := &ctrf.TestResult{
-				Suite:    event.Package,
+				Suite:    []string{event.Package},
 				Name:     event.Test,
 				Status:   actionToTestResult(event.Action),
 				Duration: secondsToMillis(event.Elapsed),
@@ -149,7 +149,7 @@ func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment) (*ctrf.R
 			// Search through the existing results for a prior run. If this is a duplicate of an existing failure,
 			// then this is likely a retry of a potentially flaky test, so update the existing test result instead
 			// of creating a new one.
-			if existingResult := findTest(event.Package, event.Test, report.Results.Tests); existingResult == nil {
+			if existingResult := findTest(newResult.Suite, newResult.Name, report.Results.Tests); existingResult == nil {
 				addResult(report, newResult)
 			} else {
 				updateResult(report, existingResult, newResult)
@@ -253,10 +253,22 @@ func actionToTestResult(action string) ctrf.TestStatus {
 	}
 }
 
+func sliceIsEqual(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}
+
 // findTest searches through the already-parsed test results to find a matching test.
-func findTest(suite string, name string, tests []*ctrf.TestResult) *ctrf.TestResult {
+func findTest(suite []string, name string, tests []*ctrf.TestResult) *ctrf.TestResult {
 	for _, test := range tests {
-		if test.Suite == suite && test.Name == name {
+		if sliceIsEqual(suite, test.Suite) && test.Name == name {
 			return test
 		}
 	}

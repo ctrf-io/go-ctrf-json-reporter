@@ -120,6 +120,32 @@ func TestRequiredProperties(t *testing.T) {
 	assert.JSONEq(t, expectedJson, actualJson)
 }
 
+func TestSuiteIsSerializedAsArray(t *testing.T) {
+	// Arrange
+	// The CTRF schema defines 'suite' as an array of strings representing the
+	// suite hierarchy from top-level to immediate parent, not a single string.
+	// https://github.com/ctrf-io/ctrf/blob/5fa00f7ab68eebb9fb1b9a1ffa4cf004827c653d/schema/ctrf.schema.json#L160-L167
+	testResult := TestResult{
+		Name:     "test 1",
+		Status:   TestPassed,
+		Duration: 10,
+		Suite:    []string{"parent suite", "child suite"},
+	}
+
+	// Act
+	data, err := json.Marshal(testResult)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Assert
+	var decoded map[string]any
+	if err := json.Unmarshal(data, &decoded); err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, []any{"parent suite", "child suite"}, decoded["suite"])
+}
+
 func TestValidation(t *testing.T) {
 	forEachValidationTestCase(t, allTestCase, func(t *testing.T, testCase validationTestCase, report *Report) {
 		t.Helper()
