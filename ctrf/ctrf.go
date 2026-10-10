@@ -316,14 +316,8 @@ func validStatus(status TestStatus) bool {
 }
 
 func (test *TestResult) Validate() []error {
-	if test.AttemptID != "" && strings.TrimSpace(test.AttemptID) == "" {
-		return singleError("attemptId must be non-empty")
-	}
-	if test.TestID != "" && strings.TrimSpace(test.TestID) == "" {
-		return singleError("identity must be non-empty")
-	}
-	if test.ExecutionID != "" && strings.TrimSpace(test.ExecutionID) == "" {
-		return singleError("identity must be non-empty")
+	if errs := test.validateIdentity(); len(errs) > 0 {
+		return errs
 	}
 
 	var errs []error
@@ -363,6 +357,20 @@ func (test *TestResult) Validate() []error {
 		}
 	}
 	return errs
+}
+
+func (test *TestResult) validateIdentity() []error {
+	if test.AttemptID != "" && strings.TrimSpace(test.AttemptID) == "" {
+		return singleError("attemptId must be non-empty")
+	}
+	if test.TestID != "" && strings.TrimSpace(test.TestID) == "" {
+		return singleError("identity must be non-empty")
+	}
+	if test.ExecutionID != "" && strings.TrimSpace(test.ExecutionID) == "" {
+		return singleError("identity must be non-empty")
+	}
+
+	return nil
 }
 
 func (attempt *RetryAttempt) validate(number int) []error {

@@ -73,7 +73,9 @@ func execute(cmd *commandContext) error {
 	}
 	effectiveVerbose := cmd.verbose && !cmd.quiet
 
-	report, err := reporter.ParseTestResults(cmd.reader, effectiveVerbose, env, reporter.IdentityOptions{RunID: cmd.runID, ShardID: cmd.shardID, SeparateExecutions: cmd.separateExecutions})
+	report, err := reporter.ParseTestResults(cmd.reader, effectiveVerbose, env, reporter.IdentityOptions{
+		RunID: cmd.runID, ShardID: cmd.shardID, SeparateExecutions: cmd.separateExecutions,
+	})
 	if err != nil {
 		return fmt.Errorf("error parsing test results: %w", err)
 	}

@@ -3,8 +3,8 @@ package reporter
 import (
 	"crypto/sha256"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"github.com/google/uuid"
 	"io"
 	"io/fs"
 	"os"
@@ -14,15 +14,19 @@ import (
 	"time"
 
 	"github.com/ctrf-io/go-ctrf-json-reporter/ctrf"
+	"github.com/google/uuid"
 )
 
+// TestEvent matches the field names emitted by go test -json.
+//
+//nolint:tagliatelle // Go test events use capitalized JSON field names.
 type TestEvent struct {
-	Time    string
-	Action  string
-	Package string
-	Test    string
-	Elapsed float64
-	Output  string
+	Time    string  `json:"Time"`
+	Action  string  `json:"Action"`
+	Package string  `json:"Package"`
+	Test    string  `json:"Test"`
+	Elapsed float64 `json:"Elapsed"`
+	Output  string  `json:"Output"`
 }
 
 const (
@@ -49,28 +53,17 @@ type IdentityOptions struct {
 func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment, identityOptions ...IdentityOptions) (*ctrf.Report, error) {
 	buildOutput = nil
 	var testEvents []TestEvent
-	decoder := json.NewDecoder(r)
 
 	options := IdentityOptions{}
 	if len(identityOptions) > 0 {
 		options = identityOptions[0]
 	}
 	if (options.RunID != "" && strings.TrimSpace(options.RunID) == "") || (options.ShardID != "" && strings.TrimSpace(options.ShardID) == "") {
-		return nil, fmt.Errorf("runId and shardId must be non-empty")
+		return nil, errors.New("runId and shardId must be non-empty")
 	}
 	report := ctrf.NewReport("gotest", env)
-	if options.RunID != "" {
-		report.RunID = options.RunID
-	}
-	if options.ShardID != "" {
-		if report.Results.Environment == nil {
-			report.Results.Environment = &ctrf.Environment{}
-		}
-		// Copy the caller's environment before attaching document metadata.
-		copied := *report.Results.Environment
-		copied.ShardID = options.ShardID
-		report.Results.Environment = &copied
-	}
+	applyReportIdentity(report, options)
+
 	report.Results.Summary.Start = time.Now().UnixMilli()
 	report.Results.Summary.Stop = report.Results.Summary.Start
 
@@ -81,34 +74,15 @@ func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment, identity
 
 	report.Results.Extra = extraMap
 
-	for {
-		var event TestEvent
-		if err := decoder.Decode(&event); err == io.EOF {
-			break
-		} else if err != nil {
-			return nil, err
-		}
-		testEvents = append(testEvents, event)
-
-		if verbose {
-			if event.Action == ActionBuildOutput || event.Action == ActionOutput {
-				fmt.Print(event.Output)
-			}
-		}
+	var err error
+	testEvents, err = decodeTestEvents(r, verbose)
+	if err != nil {
+		return nil, err
 	}
 
 	for i, event := range testEvents {
-		if event.Time != "" {
-			eventTime, err := parseTimeString(event.Time)
-			if err != nil {
-				return nil, fmt.Errorf("invalid event time %q: %w", event.Time, err)
-			}
-			if i == 0 || eventTime < report.Results.Summary.Start {
-				report.Results.Summary.Start = eventTime
-			}
-			if i == 0 || eventTime > report.Results.Summary.Stop {
-				report.Results.Summary.Stop = eventTime
-			}
+		if err := updateSummaryTime(report.Results.Summary, event, i); err != nil {
+			return nil, err
 		}
 		// If we see any test failures, mark an overall failure in the Extra fields
 		if event.Action == ActionFail {
@@ -154,51 +128,8 @@ func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment, identity
 		// From this point on, we only deal with pass, fail, and skip events, which indicate that the
 		// test has completed, and we can create/update a TestResult for it.
 		if event.Action == ActionPass || event.Action == ActionFail || event.Action == ActionSkip {
-			// Look up the start time, and use this event's time as the endTime, to mark the start/stop times
-			// for the test result. Duration we get from the event.Elapsed field, which better takes into
-			// account parallel tests, setup/teardown time, etc...
-			startTime, ok := testStartTimes[testNameKey(event.Package, event.Test)]
-			if ok {
-				delete(testStartTimes, testNameKey(event.Package, event.Test))
-			}
-			stopTime := eventTime
-
-			// Determine the message for this test result. We only include messages on failures though,
-			// per the CTRF spec, so if this is not a failure, we pass an empty string for the message.
-			message := ""
-			if event.Action == ActionFail {
-				message = getMessagesForTest(testEvents, i, event.Package, event.Test, startTime)
-			}
-
-			// Build the TestResult for this test event, and add it to the report.
-			tuple, _ := json.Marshal([]string{event.Package, event.Test})
-			logicalID := fmt.Sprintf("ctrf:go:v1:%x", sha256.Sum256(tuple))
-			if options.TestIDResolver != nil {
-				logicalID = options.TestIDResolver(event.Package, event.Test)
-			}
-			if strings.TrimSpace(logicalID) == "" {
-				return nil, fmt.Errorf("testId resolver must return a non-empty string")
-			}
-			newResult := &ctrf.TestResult{
-				TestID:      logicalID,
-				ExecutionID: uuid.NewString(),
-				AttemptID:   uuid.NewString(),
-				Suite:       []string{event.Package},
-				Name:        event.Test,
-				Status:      actionToTestResult(event.Action),
-				Duration:    secondsToMillis(event.Elapsed),
-				Message:     message,
-				Start:       startTime,
-				Stop:        stopTime,
-			}
-
-			// Search through the existing results for a prior run. If this is a duplicate of an existing failure,
-			// then this is likely a retry of a potentially flaky test, so update the existing test result instead
-			// of creating a new one.
-			if existingResult := findTest(newResult.Suite, newResult.Name, report.Results.Tests); existingResult == nil || options.SeparateExecutions {
-				addResult(report, newResult)
-			} else {
-				updateResult(report, existingResult, newResult)
+			if err := addCompletedEvent(report, testEvents, i, testStartTimes, options); err != nil {
+				return nil, err
 			}
 		}
 	}
@@ -206,6 +137,116 @@ func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment, identity
 	enrichReportWithFilenames(report)
 
 	return report, nil
+}
+
+func updateSummaryTime(summary *ctrf.Summary, event TestEvent, index int) error {
+	if event.Time != "" {
+		eventTime, err := parseTimeString(event.Time)
+		if err != nil {
+			return fmt.Errorf("invalid event time %q: %w", event.Time, err)
+		}
+		if index == 0 || eventTime < summary.Start {
+			summary.Start = eventTime
+		}
+		if index == 0 || eventTime > summary.Stop {
+			summary.Stop = eventTime
+		}
+	}
+	return nil
+}
+
+func applyReportIdentity(report *ctrf.Report, options IdentityOptions) {
+	if options.RunID != "" {
+		report.RunID = options.RunID
+	}
+	if options.ShardID != "" {
+		if report.Results.Environment == nil {
+			report.Results.Environment = &ctrf.Environment{}
+		}
+		// Copy the caller's environment before attaching document metadata.
+		copied := *report.Results.Environment
+		copied.ShardID = options.ShardID
+		report.Results.Environment = &copied
+	}
+}
+
+func decodeTestEvents(r io.Reader, verbose bool) ([]TestEvent, error) {
+	var testEvents []TestEvent
+	decoder := json.NewDecoder(r)
+	for {
+		var event TestEvent
+		if err := decoder.Decode(&event); err == io.EOF {
+			break
+		} else if err != nil {
+			return nil, err
+		}
+		testEvents = append(testEvents, event)
+
+		if verbose {
+			if event.Action == ActionBuildOutput || event.Action == ActionOutput {
+				fmt.Fprint(os.Stdout, event.Output)
+			}
+		}
+	}
+
+	return testEvents, nil
+}
+
+func addCompletedEvent(report *ctrf.Report, testEvents []TestEvent, index int, testStartTimes map[string]int64, options IdentityOptions) error {
+	event := testEvents[index]
+	// Look up the start time, and use this event's time as the endTime, to mark the start/stop times
+	// for the test result. Duration we get from the event.Elapsed field, which better takes into
+	// account parallel tests, setup/teardown time, etc...
+	startTime, ok := testStartTimes[testNameKey(event.Package, event.Test)]
+	if ok {
+		delete(testStartTimes, testNameKey(event.Package, event.Test))
+	}
+	stopTime, err := parseTimeString(event.Time)
+	if err != nil {
+		return fmt.Errorf("invalid test event time %q: %w", event.Time, err)
+	}
+
+	// Determine the message for this test result. We only include messages on failures though,
+	// per the CTRF spec, so if this is not a failure, we pass an empty string for the message.
+	message := ""
+	if event.Action == ActionFail {
+		message = getMessagesForTest(testEvents, index, event.Package, event.Test, startTime)
+	}
+
+	// Build the TestResult for this test event, and add it to the report.
+	tuple, err := json.Marshal([]string{event.Package, event.Test})
+	if err != nil {
+		return fmt.Errorf("encode test identity: %w", err)
+	}
+	logicalID := fmt.Sprintf("ctrf:go:v1:%x", sha256.Sum256(tuple))
+	if options.TestIDResolver != nil {
+		logicalID = options.TestIDResolver(event.Package, event.Test)
+	}
+	if strings.TrimSpace(logicalID) == "" {
+		return errors.New("testId resolver must return a non-empty string")
+	}
+	newResult := &ctrf.TestResult{
+		TestID:      logicalID,
+		ExecutionID: uuid.NewString(),
+		AttemptID:   uuid.NewString(),
+		Suite:       []string{event.Package},
+		Name:        event.Test,
+		Status:      actionToTestResult(event.Action),
+		Duration:    secondsToMillis(event.Elapsed),
+		Message:     message,
+		Start:       startTime,
+		Stop:        stopTime,
+	}
+
+	// Search through the existing results for a prior run. If this is a duplicate of an existing failure,
+	// then this is likely a retry of a potentially flaky test, so update the existing test result instead
+	// of creating a new one.
+	if existingResult := findTest(newResult.Suite, newResult.Name, report.Results.Tests); existingResult == nil || options.SeparateExecutions {
+		addResult(report, newResult)
+	} else {
+		updateResult(report, existingResult, newResult)
+	}
+	return nil
 }
 
 // addResult adds a new test result to the report, filling out all the relevant details.
