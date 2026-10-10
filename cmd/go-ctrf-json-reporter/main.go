@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"strconv"
 
 	"github.com/ctrf-io/go-ctrf-json-reporter/ctrf"
 	"github.com/ctrf-io/go-ctrf-json-reporter/reporter"
@@ -24,16 +25,19 @@ type commandContext struct {
 
 // commandFlags stores parsed command line flags.
 type commandFlags struct {
-	outputFile  string
-	verbose     bool
-	quiet       bool
-	appName     string
-	appVersion  string
-	oSPlatform  string
-	oSRelease   string
-	oSVersion   string
-	buildName   string
-	buildNumber string
+	runID              string
+	shardID            string
+	separateExecutions bool
+	outputFile         string
+	verbose            bool
+	quiet              bool
+	appName            string
+	appVersion         string
+	oSPlatform         string
+	oSRelease          string
+	oSVersion          string
+	buildName          string
+	buildNumber        string
 }
 
 // NOTE(fredbi)
@@ -63,10 +67,13 @@ func main() {
 }
 
 func execute(cmd *commandContext) error {
-	env := ctrfEnvFromFlags(cmd)
+	env, err := ctrfEnvFromFlags(cmd)
+	if err != nil {
+		return err
+	}
 	effectiveVerbose := cmd.verbose && !cmd.quiet
 
-	report, err := reporter.ParseTestResults(cmd.reader, effectiveVerbose, env)
+	report, err := reporter.ParseTestResults(cmd.reader, effectiveVerbose, env, reporter.IdentityOptions{RunID: cmd.runID, ShardID: cmd.shardID, SeparateExecutions: cmd.separateExecutions})
 	if err != nil {
 		return fmt.Errorf("error parsing test results: %w", err)
 	}
@@ -83,11 +90,7 @@ func execute(cmd *commandContext) error {
 
 	var buildFailed bool
 	if report.Results.Extra != nil {
-		extraMap, isMap := report.Results.Extra.(map[string]any)
-		if !isMap {
-			err = fmt.Errorf("expected a map, but got %T instead", report.Results.Extra)
-			return fmt.Errorf("error extracting report results: %w", err)
-		}
+		extraMap := report.Results.Extra
 		if _, ok := extraMap["buildFail"]; ok {
 			buildFailed = true
 		}
@@ -108,6 +111,9 @@ func execute(cmd *commandContext) error {
 }
 
 func registerFlags(flags *commandFlags) {
+	flag.StringVar(&flags.runID, "runId", "", "Logical run ID shared by coordinated reports")
+	flag.StringVar(&flags.shardID, "shardId", "", "Partition producing this document")
+	flag.BoolVar(&flags.separateExecutions, "separate-executions", false, "Treat repeated tests as separate executions (go test -count)")
 	flag.BoolVar(&flags.verbose, "verbose", false, "Enable verbose output")
 	flag.BoolVar(&flags.verbose, "v", false, "Enable verbose output (shorthand)")
 	flag.BoolVar(&flags.quiet, "quiet", false, "Disable all log output")
@@ -122,19 +128,26 @@ func registerFlags(flags *commandFlags) {
 	flag.StringVar(&flags.oSRelease, "osRelease", "", "The release version of the operating system.")
 	flag.StringVar(&flags.oSVersion, "osVersion", "", "The version number of the operating system.")
 	flag.StringVar(&flags.buildName, "buildName", "", "The name of the build (e.g., feature branch name).")
-	flag.StringVar(&flags.buildNumber, "buildNumber", "", "The build number or identifier.")
+	flag.StringVar(&flags.buildNumber, "buildNumber", "", "The integer build number.")
 
 	// parsing errors result in os.Exit(1). Perhaps we should call the flagset version and capture the error instead.
 	flag.Parse()
 }
 
-func ctrfEnvFromFlags(cmd *commandContext) *ctrf.Environment {
+func ctrfEnvFromFlags(cmd *commandContext) (*ctrf.Environment, error) {
 	if cmd.appName == "" && cmd.appVersion == "" && cmd.oSPlatform == "" &&
 		cmd.oSRelease == "" && cmd.oSVersion == "" && cmd.buildName == "" &&
 		cmd.buildNumber == "" {
-		return nil
+		return nil, nil //nolint:nilnil // No environment flags means the optional environment is omitted.
 	}
-
+	var buildNumber *int64
+	if cmd.buildNumber != "" {
+		value, err := strconv.ParseInt(cmd.buildNumber, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("buildNumber must be an integer: %w", err)
+		}
+		buildNumber = &value
+	}
 	return &ctrf.Environment{
 		AppName:     cmd.appName,
 		AppVersion:  cmd.appVersion,
@@ -142,6 +155,6 @@ func ctrfEnvFromFlags(cmd *commandContext) *ctrf.Environment {
 		OSRelease:   cmd.oSRelease,
 		OSVersion:   cmd.oSVersion,
 		BuildName:   cmd.buildName,
-		BuildNumber: cmd.buildNumber,
-	}
+		BuildNumber: buildNumber,
+	}, nil
 }

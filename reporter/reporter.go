@@ -1,8 +1,10 @@
 package reporter
 
 import (
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
 	"io"
 	"io/fs"
 	"os"
@@ -35,12 +37,42 @@ const (
 
 var buildOutput []string
 
-func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment) (*ctrf.Report, error) {
+// IdentityOptions controls coordinated runs and explicit repeated-execution input.
+type IdentityOptions struct {
+	RunID   string
+	ShardID string
+	// Set for go test -count input; every completion is a separate execution, not a retry.
+	SeparateExecutions bool
+	TestIDResolver     func(packageName, testName string) string
+}
+
+func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment, identityOptions ...IdentityOptions) (*ctrf.Report, error) {
+	buildOutput = nil
 	var testEvents []TestEvent
 	decoder := json.NewDecoder(r)
 
+	options := IdentityOptions{}
+	if len(identityOptions) > 0 {
+		options = identityOptions[0]
+	}
+	if (options.RunID != "" && strings.TrimSpace(options.RunID) == "") || (options.ShardID != "" && strings.TrimSpace(options.ShardID) == "") {
+		return nil, fmt.Errorf("runId and shardId must be non-empty")
+	}
 	report := ctrf.NewReport("gotest", env)
-	report.Results.Summary.Start = time.Now().UnixNano() / int64(time.Millisecond)
+	if options.RunID != "" {
+		report.RunID = options.RunID
+	}
+	if options.ShardID != "" {
+		if report.Results.Environment == nil {
+			report.Results.Environment = &ctrf.Environment{}
+		}
+		// Copy the caller's environment before attaching document metadata.
+		copied := *report.Results.Environment
+		copied.ShardID = options.ShardID
+		report.Results.Environment = &copied
+	}
+	report.Results.Summary.Start = time.Now().UnixMilli()
+	report.Results.Summary.Stop = report.Results.Summary.Start
 
 	testStartTimes := make(map[string]int64)
 	extraMap := make(map[string]any)
@@ -66,6 +98,18 @@ func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment) (*ctrf.R
 	}
 
 	for i, event := range testEvents {
+		if event.Time != "" {
+			eventTime, err := parseTimeString(event.Time)
+			if err != nil {
+				return nil, fmt.Errorf("invalid event time %q: %w", event.Time, err)
+			}
+			if i == 0 || eventTime < report.Results.Summary.Start {
+				report.Results.Summary.Start = eventTime
+			}
+			if i == 0 || eventTime > report.Results.Summary.Stop {
+				report.Results.Summary.Stop = eventTime
+			}
+		}
 		// If we see any test failures, mark an overall failure in the Extra fields
 		if event.Action == ActionFail {
 			extraMap["FailedBuild"] = true
@@ -85,7 +129,7 @@ func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment) (*ctrf.R
 		if event.Action == ActionBuildFail {
 			buildFailEvents = append(buildFailEvents, event)
 			extraMap["buildFail"] = buildFailEvents
-			break
+			continue
 		}
 
 		if event.Action == ActionOutput {
@@ -100,20 +144,11 @@ func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment) (*ctrf.R
 		// Parse timestamp data from the event
 		eventTime, err := parseTimeString(event.Time)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "error parsing test event start time '%s' : %v\n", event.Time, err)
-		} else {
-			if eventTime < report.Results.Summary.Start {
-				report.Results.Summary.Start = eventTime
-			}
-			if eventTime > report.Results.Summary.Stop {
-				report.Results.Summary.Stop = eventTime
-			}
-
-			// If this is a "run" event, record the start time of the test. We'll look this up later when
-			// we process the "pass"/"fail"/"skip" event for the test to create the TestResult
-			if event.Action == ActionRun {
-				testStartTimes[testNameKey(event.Package, event.Test)] = eventTime
-			}
+			return nil, fmt.Errorf("invalid test event time %q: %w", event.Time, err)
+		}
+		// A run event starts a new attempt for this test.
+		if event.Action == ActionRun {
+			testStartTimes[testNameKey(event.Package, event.Test)] = eventTime
 		}
 
 		// From this point on, we only deal with pass, fail, and skip events, which indicate that the
@@ -136,20 +171,31 @@ func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment) (*ctrf.R
 			}
 
 			// Build the TestResult for this test event, and add it to the report.
+			tuple, _ := json.Marshal([]string{event.Package, event.Test})
+			logicalID := fmt.Sprintf("ctrf:go:v1:%x", sha256.Sum256(tuple))
+			if options.TestIDResolver != nil {
+				logicalID = options.TestIDResolver(event.Package, event.Test)
+			}
+			if strings.TrimSpace(logicalID) == "" {
+				return nil, fmt.Errorf("testId resolver must return a non-empty string")
+			}
 			newResult := &ctrf.TestResult{
-				Suite:    []string{event.Package},
-				Name:     event.Test,
-				Status:   actionToTestResult(event.Action),
-				Duration: secondsToMillis(event.Elapsed),
-				Message:  message,
-				Start:    startTime,
-				Stop:     stopTime,
+				TestID:      logicalID,
+				ExecutionID: uuid.NewString(),
+				AttemptID:   uuid.NewString(),
+				Suite:       []string{event.Package},
+				Name:        event.Test,
+				Status:      actionToTestResult(event.Action),
+				Duration:    secondsToMillis(event.Elapsed),
+				Message:     message,
+				Start:       startTime,
+				Stop:        stopTime,
 			}
 
 			// Search through the existing results for a prior run. If this is a duplicate of an existing failure,
 			// then this is likely a retry of a potentially flaky test, so update the existing test result instead
 			// of creating a new one.
-			if existingResult := findTest(newResult.Suite, newResult.Name, report.Results.Tests); existingResult == nil {
+			if existingResult := findTest(newResult.Suite, newResult.Name, report.Results.Tests); existingResult == nil || options.SeparateExecutions {
 				addResult(report, newResult)
 			} else {
 				updateResult(report, existingResult, newResult)
@@ -186,53 +232,50 @@ func addResult(report *ctrf.Report, result *ctrf.TestResult) {
 }
 
 func updateResult(report *ctrf.Report, oldResult, newResult *ctrf.TestResult) {
-	// If the existing result does not have a retries field, initialize it, and move the
-	// results to the first RetryAttempts object
-	if oldResult.RetryAttempts == nil {
-		oldResult.Retries = 1
-		oldResult.RetryAttempts = append(oldResult.RetryAttempts, ctrf.RetryAttempt{
-			Attempt:  1,
-			Status:   oldResult.Status,
-			Message:  oldResult.Message,
-			Duration: oldResult.Duration,
-			Start:    oldResult.Start,
-			Stop:     oldResult.Stop,
-		})
-	}
-
-	// If this is a pass after a failure, mark the test as flaky, not failed,
-	// and update the summary counts accordingly
-	if oldResult.Status == ctrf.TestFailed && newResult.Status == ctrf.TestPassed {
-		oldResult.Flaky = true
-		report.Results.Summary.Flaky++
-		report.Results.Summary.Failed--
-	}
-
-	// Update the overall test status to match that of the new result
-	oldResult.Status = newResult.Status
-
-	// Clear out the top-level message on the overall result, since the messages are in the retries
-	oldResult.Message = ""
-
-	// Update the times of the overall test result
-	oldResult.Duration += newResult.Duration
-	if newResult.Stop > oldResult.Stop {
-		oldResult.Stop = newResult.Stop
-	}
-	if newResult.Start < oldResult.Start {
-		oldResult.Start = newResult.Start
-	}
-
-	// Now add the new attempt to the retries
-	oldResult.Retries++
 	oldResult.RetryAttempts = append(oldResult.RetryAttempts, ctrf.RetryAttempt{
-		Attempt:  oldResult.Retries,
-		Status:   newResult.Status,
-		Message:  newResult.Message,
-		Duration: newResult.Duration,
-		Start:    newResult.Start,
-		Stop:     newResult.Stop,
+		Attempt:   len(oldResult.RetryAttempts) + 1,
+		AttemptID: oldResult.AttemptID,
+		Status:    oldResult.Status, Message: oldResult.Message,
+		Duration: oldResult.Duration, Start: oldResult.Start, Stop: oldResult.Stop,
 	})
+	executionID := oldResult.ExecutionID
+	history := oldResult.RetryAttempts
+	wasFlaky := oldResult.Flaky
+	// The top-level fields always describe the final attempt.
+	*oldResult = *newResult
+	oldResult.ExecutionID = executionID
+	oldResult.RetryAttempts = history
+	oldResult.Retries = len(history)
+	if oldResult.Status == ctrf.TestPassed {
+		for _, attempt := range history {
+			if attempt.Status == ctrf.TestFailed {
+				oldResult.Flaky = true
+				break
+			}
+		}
+	}
+	if wasFlaky {
+		report.Results.Summary.Flaky--
+	}
+	if oldResult.Flaky {
+		report.Results.Summary.Flaky++
+	}
+	summary := report.Results.Summary
+	summary.Passed, summary.Failed, summary.Skipped, summary.Pending, summary.Other = 0, 0, 0, 0, 0
+	for _, result := range report.Results.Tests {
+		switch result.Status {
+		case ctrf.TestPassed:
+			summary.Passed++
+		case ctrf.TestFailed:
+			summary.Failed++
+		case ctrf.TestSkipped:
+			summary.Skipped++
+		case ctrf.TestPending:
+			summary.Pending++
+		default:
+			summary.Other++
+		}
+	}
 }
 
 // testNameKey generates a unique key for a map lookup based on the test name and suite.

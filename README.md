@@ -39,6 +39,8 @@ Explore more <a href="https://www.ctrf.io/integrations">integrations</a>
 
 ```json
 {
+  "reportFormat": "CTRF",
+  "specVersion": "0.2.0",
   "results": {
     "tool": {
       "name": "gotest"
@@ -63,7 +65,7 @@ Explore more <a href="https://www.ctrf.io/integrations">integrations</a>
     "environment": {
       "appName": "MyApp",
       "buildName": "MyBuild",
-      "buildNumber": "1"
+      "buildNumber": 1
     }
   }
 }
@@ -142,6 +144,46 @@ The test object in the report includes the following [CTRF properties](https://c
 | `duration` | Number          | Required | The time taken for the test execution, in milliseconds.                             |
 | `message`  | String          | Optional | The failure message if the test failed.                                             |
 | `suite`    | Array of String | Required | The go package containing the test, as a single-element suite hierarchy.            |
+
+## CTRF 0.2.0 compatibility
+
+Reports declare `specVersion: "0.2.0"`. This update corrects existing properties;
+it does not add the remaining optional CTRF fields.
+
+Breaking changes for Go package consumers:
+
+- `Environment.BuildNumber` is now `*int64`: nil omits it; a pointer to zero
+  emits `0`. The `-buildNumber` flag accepts integer values and rejects arbitrary
+  identifiers. Store nonnumeric build identifiers in `Environment.Extra`.
+- Every `Extra` field and `TestResult.Parameters` now uses `map[string]any` so
+  these properties serialize as objects. `TestResult.Steps` uses `[]ctrf.Step`
+  with `Name`, `Status`, and optional `Extra` fields. Custom step properties
+  belong in `Extra`.
+- `retryAttempts` contains only attempts completed before the final attempt,
+  numbered from 1. `retries` equals the history length. The test's top-level
+  status, duration, start, stop, and failure message describe the final attempt.
+  To calculate total execution time, sum the final duration and history durations.
+- A flaky test is a final pass after an earlier failure. It counts in `passed`;
+  `flaky` is a subset, not an additional outcome category.
+- Empty input and packages with no tests produce `tests: []`, with valid summary
+  timestamps. Summary bounds include package and build events.
+- Report writes reject invalid format/version/UUID, test and step statuses,
+  retry history, durations, screenshots, and non-JSON metadata. Invalid reports
+  do not truncate existing output files. `Validate` checks typed Go reports;
+  it is not a schema validator for arbitrary input JSON.
+
+Validate generated reports with the CTRF CLI:
+
+```bash
+ctrf validate-strict ctrf-report.json --spec-version 0.2.0
+```
+
+For a strict check covering all currently supported properties:
+
+```bash
+CTRF_COMPLIANCE_OUTPUT=/tmp/go-ctrf-all-properties.json go test ./ctrf -run TestExistingProperties -count=1
+ctrf validate-strict /tmp/go-ctrf-all-properties.json --spec-version 0.2.0
+```
 
 ## Troubleshoot
 
@@ -223,3 +265,9 @@ If you find this project useful, consider giving it a GitHub star ⭐ It means a
 [release-url]: https://badge.fury.io/gh/ctrf-io%2Fgo-ctrf-json-reporter
 [license-badge]: https://img.shields.io/badge/license-MIT-orange.svg
 [license-url]: https://github.com/ctrf-io/go-ctrf-json-reporter/?tab=MIT-1-ov-file#readme
+
+## Identity and lineage
+
+Reports include a stable document `reportId`, generated `runId`, deterministic `testId` from package plus full test/subtest name, and an `executionId` retained across retry history. The final Test and each historical retry entry have distinct `attemptId` values. Set `--runId` and `--shardId` to coordinate shards. The Go API accepts `IdentityOptions`, including a `TestIDResolver`. Identity values must be non-empty.
+
+The native Go event stream does not label retries separately from repeated tests. By default repeated completions are combined into retry history. For `go test -count` executions that must remain separate, use `--separate-executions` (API `SeparateExecutions`).

@@ -24,14 +24,13 @@ func TestExecute(t *testing.T) {
 			require.ErrorContains(t, err, "no such file")
 		})
 
-		t.Run("should error because no report data is provided", func(t *testing.T) {
+		t.Run("should write an empty report when no report data is provided", func(t *testing.T) {
 			ctx := freshContext(nil, nil)
 			output := filepath.Join(tempDir, "test-report-ko.json")
 			ctx.outputFile = output
 
 			err := execute(ctx)
-			require.Error(t, err)
-			require.ErrorContains(t, err, "report is invalid")
+			require.NoError(t, err)
 		})
 
 		t.Run("should parse go test json data", func(t *testing.T) {
@@ -150,5 +149,23 @@ func freshContext(writer io.Writer, reader io.Reader) *commandContext {
 	return &commandContext{
 		writer: writer,
 		reader: reader,
+	}
+}
+
+func TestBuildNumber(t *testing.T) {
+	for _, value := range []string{"0", "100", "-1"} {
+		ctx := freshContext(nil, nil)
+		ctx.buildNumber = value
+		env, err := ctrfEnvFromFlags(ctx)
+		require.NoError(t, err)
+		data, err := json.Marshal(env)
+		require.NoError(t, err)
+		require.Contains(t, string(data), `"buildNumber":`+value)
+	}
+	for _, value := range []string{"build-1", "1.5", "9223372036854775808"} {
+		ctx := freshContext(nil, nil)
+		ctx.buildNumber = value
+		_, err := ctrfEnvFromFlags(ctx)
+		require.ErrorContains(t, err, "buildNumber must be an integer")
 	}
 }

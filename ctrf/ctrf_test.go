@@ -20,13 +20,12 @@ func TestRequiredProperties(t *testing.T) {
 				Name: "my tool",
 			},
 			Summary: &Summary{
-				Tests:   21,
-				Passed:  6,
-				Failed:  5,
-				Pending: 4,
-				Skipped: 3,
-				Other:   2,
-				Flaky:   1,
+				Tests:   5,
+				Passed:  1,
+				Failed:  1,
+				Pending: 1,
+				Skipped: 1,
+				Other:   1,
 				Start:   42,
 				Stop:    1337,
 			},
@@ -62,20 +61,19 @@ func TestRequiredProperties(t *testing.T) {
 
 	expectedJson := `{
   "reportFormat": "CTRF",
-  "specVersion": "0.0.0",
+  "specVersion": "0.2.0",
   "timestamp": "0001-01-01T00:00:00Z",
   "results": {
     "tool": {
       "name": "my tool"
     },
     "summary": {
-      "tests": 21,
-      "passed": 6,
-      "failed": 5,
-      "pending": 4,
-      "skipped": 3,
-      "other": 2,
-      "flaky": 1,
+      "tests": 5,
+      "passed": 1,
+      "failed": 1,
+      "pending": 1,
+      "skipped": 1,
+      "other": 1,
       "start": 42,
       "stop": 1337
     },

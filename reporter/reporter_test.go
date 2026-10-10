@@ -2,6 +2,7 @@ package reporter_test
 
 import (
 	"bytes"
+	"fmt"
 	"testing"
 
 	"github.com/ctrf-io/go-ctrf-json-reporter/ctrf"
@@ -35,6 +36,17 @@ func Test_Enrich_Reporter(t *testing.T) {
 	actual, err := reporter.ParseTestResults(bytes.NewBufferString(input), false, &ctrf.Environment{})
 
 	require.NoError(t, err)
+	for _, result := range actual.Results.Tests {
+		require.NotEmpty(t, result.TestID)
+		require.NotEmpty(t, result.ExecutionID)
+		require.NotEmpty(t, result.AttemptID)
+		result.AttemptID = ""
+		result.TestID, result.ExecutionID = "", ""
+		for i := range result.RetryAttempts {
+			require.NotEmpty(t, result.RetryAttempts[i].AttemptID)
+			result.RetryAttempts[i].AttemptID = ""
+		}
+	}
 	assert.Equal(t, expected.Results.Tests, actual.Results.Tests)
 }
 
@@ -146,6 +158,17 @@ func Test_Enrich_ReporterWithUnorderedMessages(t *testing.T) {
 	actual, err := reporter.ParseTestResults(bytes.NewBufferString(input), false, &ctrf.Environment{})
 
 	require.NoError(t, err)
+	for _, result := range actual.Results.Tests {
+		require.NotEmpty(t, result.TestID)
+		require.NotEmpty(t, result.ExecutionID)
+		require.NotEmpty(t, result.AttemptID)
+		result.AttemptID = ""
+		result.TestID, result.ExecutionID = "", ""
+		for i := range result.RetryAttempts {
+			require.NotEmpty(t, result.RetryAttempts[i].AttemptID)
+			result.RetryAttempts[i].AttemptID = ""
+		}
+	}
 	assert.Equal(t, expected.Results.Tests, actual.Results.Tests)
 }
 
@@ -153,12 +176,12 @@ func TestDetectFlakyTests(t *testing.T) {
 	expected := &ctrf.Report{Results: &ctrf.Results{
 		Summary: &ctrf.Summary{
 			Tests:   4,
-			Passed:  1,
+			Passed:  2,
 			Failed:  1,
 			Skipped: 1,
 			Flaky:   1,
-			Start:   1775245677812, // The event timestamp of the first processed event
-			Stop:    1775245679646, // The event timestamp of the last processed event
+			Start:   1775245677561, // Includes the package start event
+			Stop:    1775245679648, // Includes the package completion event
 		},
 		Extra: map[string]any{
 			"FailedBuild": true,
@@ -178,11 +201,11 @@ func TestDetectFlakyTests(t *testing.T) {
 				Status:   ctrf.TestFailed,
 				Suite:    []string{"github.com/ctrf-io/go-ctrf-json-reporter/examples/flaky"},
 				Filepath: "reporter_test.go",
-				Retries:  3,
-				Start:    1775245677863, // The start time of the first event for the first retry
+				Retries:  2,
+				Start:    1775245679196, // Final attempt start
 				Stop:     1775245679247, // The stop time of the last event for the last retry
-				Duration: 150,
-				Message:  "",
+				Duration: 50,
+				Message:  "=== RUN   Test_Flaky_Fail\n    flaky_test.go:21: This test is designed to fail.\n--- FAIL: Test_Flaky_Fail (0.05s)\n",
 				RetryAttempts: []ctrf.RetryAttempt{
 					{
 						Attempt: 1, Status: ctrf.TestFailed, Start: 1775245677863, Stop: 1775245677914, Duration: 50,
@@ -190,10 +213,6 @@ func TestDetectFlakyTests(t *testing.T) {
 					},
 					{
 						Attempt: 2, Status: ctrf.TestFailed, Start: 1775245678350, Stop: 1775245678401, Duration: 50,
-						Message: "=== RUN   Test_Flaky_Fail\n    flaky_test.go:21: This test is designed to fail.\n--- FAIL: Test_Flaky_Fail (0.05s)\n",
-					},
-					{
-						Attempt: 3, Status: ctrf.TestFailed, Start: 1775245679196, Stop: 1775245679247, Duration: 50,
 						Message: "=== RUN   Test_Flaky_Fail\n    flaky_test.go:21: This test is designed to fail.\n--- FAIL: Test_Flaky_Fail (0.05s)\n",
 					},
 				},
@@ -211,10 +230,10 @@ func TestDetectFlakyTests(t *testing.T) {
 				Status:   ctrf.TestPassed,
 				Suite:    []string{"github.com/ctrf-io/go-ctrf-json-reporter/examples/flaky"},
 				Filepath: "reporter_test.go",
-				Retries:  3,
+				Retries:  2,
 				Flaky:    true,
-				Duration: 150,
-				Start:    1775245677914,
+				Duration: 50,
+				Start:    1775245679595,
 				Stop:     1775245679646,
 				RetryAttempts: []ctrf.RetryAttempt{
 					{
@@ -225,7 +244,6 @@ func TestDetectFlakyTests(t *testing.T) {
 						Attempt: 2, Status: ctrf.TestFailed, Duration: 50, Start: 1775245678784, Stop: 1775245678837,
 						Message: "=== RUN   Test_Flaky_Flaky\n    flaky_test.go:54: Flaky Failure (attempt 2)\n--- FAIL: Test_Flaky_Flaky (0.05s)\n",
 					},
-					{Attempt: 3, Status: ctrf.TestPassed, Duration: 50, Start: 1775245679595, Stop: 1775245679646},
 				},
 			},
 		},
@@ -295,6 +313,69 @@ func TestDetectFlakyTests(t *testing.T) {
 
 	require.NoError(t, err)
 	assert.Equal(t, expected.Results.Summary, actual.Results.Summary)
+	for _, result := range actual.Results.Tests {
+		require.NotEmpty(t, result.TestID)
+		require.NotEmpty(t, result.ExecutionID)
+		require.NotEmpty(t, result.AttemptID)
+		result.AttemptID = ""
+		result.TestID, result.ExecutionID = "", ""
+		for i := range result.RetryAttempts {
+			require.NotEmpty(t, result.RetryAttempts[i].AttemptID)
+			result.RetryAttempts[i].AttemptID = ""
+		}
+	}
 	assert.Equal(t, expected.Results.Tests, actual.Results.Tests)
 	assert.Equal(t, expected.Results.Extra, actual.Results.Extra)
+}
+
+func TestRetryTransitions(t *testing.T) {
+	cases := [][]string{
+		{"fail", "pass"},
+		{"fail", "fail", "pass"},
+		{"fail", "pass", "fail"},
+		{"pass", "fail"},
+		{"fail", "skip"},
+		{"skip", "pass"},
+		{"pass", "pass"},
+	}
+	for _, actions := range cases {
+		t.Run(fmt.Sprint(actions), func(t *testing.T) {
+			var input bytes.Buffer
+			failedBefore := false
+			for i, action := range actions {
+				fmt.Fprintf(&input, `{"Time":"2026-10-05T00:00:%02dZ","Action":"run","Package":"pkg","Test":"TestRetry"}`+"\n", i*2)
+				fmt.Fprintf(&input, `{"Time":"2026-10-05T00:00:%02dZ","Action":%q,"Package":"pkg","Test":"TestRetry","Elapsed":0.01}`+"\n", i*2+1, action)
+				if i < len(actions)-1 && action == "fail" {
+					failedBefore = true
+				}
+			}
+			report, err := reporter.ParseTestResults(&input, false, nil)
+			require.NoError(t, err)
+			require.Empty(t, report.Validate())
+			test := report.Results.Tests[0]
+			require.Equal(t, len(actions)-1, test.Retries)
+			require.Len(t, test.RetryAttempts, test.Retries)
+			require.Equal(t, int64(10), test.Duration)
+			require.Equal(t, failedBefore && actions[len(actions)-1] == "pass", test.Flaky)
+			require.Equal(t, 1, report.Results.Summary.Tests)
+			if test.Status == ctrf.TestPassed {
+				require.Equal(t, 1, report.Results.Summary.Passed)
+			}
+			for i, attempt := range test.RetryAttempts {
+				require.Equal(t, i+1, attempt.Attempt)
+			}
+		})
+	}
+}
+
+func TestEmptyAndPackageOnlyRuns(t *testing.T) {
+	for _, input := range []string{"", `{"Time":"2026-10-05T00:00:00Z","Action":"start","Package":"pkg"}
+{"Time":"2026-10-05T00:00:01Z","Action":"pass","Package":"pkg"}`, `{"Time":"2026-10-05T00:00:00Z","Action":"build-fail","Package":"pkg"}`} {
+		report, err := reporter.ParseTestResults(bytes.NewBufferString(input), false, nil)
+		require.NoError(t, err)
+		require.Empty(t, report.Validate())
+		require.NotNil(t, report.Results.Tests)
+		require.Empty(t, report.Results.Tests)
+		require.GreaterOrEqual(t, report.Results.Summary.Stop, report.Results.Summary.Start)
+	}
 }
