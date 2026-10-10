@@ -33,7 +33,6 @@ const (
 
 func NewReport(toolName string, env *Environment) *Report {
 	return &Report{
-		RunID:        uuid.NewString(),
 		ReportFormat: ReportFormatCTRF,
 		SpecVersion:  SpecVersionCTRF,
 		ReportId:     uuid.New().String(),

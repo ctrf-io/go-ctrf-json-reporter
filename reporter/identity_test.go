@@ -27,6 +27,7 @@ func TestIdentityLifecycle(t *testing.T) {
 	require.Empty(t, one.Validate())
 	repeated, err := ParseTestResults(strings.NewReader(input), false, nil, IdentityOptions{SeparateExecutions: true})
 	require.NoError(t, err)
+	require.Empty(t, repeated.RunID)
 	require.Len(t, repeated.Results.Tests, 2)
 	require.Equal(t, repeated.Results.Tests[0].TestID, repeated.Results.Tests[1].TestID)
 	require.NotEqual(t, repeated.Results.Tests[0].ExecutionID, repeated.Results.Tests[1].ExecutionID)

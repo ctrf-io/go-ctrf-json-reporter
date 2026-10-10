@@ -265,9 +265,3 @@ If you find this project useful, consider giving it a GitHub star ⭐ It means a
 [release-url]: https://badge.fury.io/gh/ctrf-io%2Fgo-ctrf-json-reporter
 [license-badge]: https://img.shields.io/badge/license-MIT-orange.svg
 [license-url]: https://github.com/ctrf-io/go-ctrf-json-reporter/?tab=MIT-1-ov-file#readme
-
-## Identity and lineage
-
-Reports include a stable document `reportId`, generated `runId`, deterministic `testId` from package plus full test/subtest name, and an `executionId` retained across retry history. The final Test and each historical retry entry have distinct `attemptId` values. Set `--runId` and `--shardId` to coordinate shards. The Go API accepts `IdentityOptions`, including a `TestIDResolver`. Identity values must be non-empty.
-
-The native Go event stream does not label retries separately from repeated tests. By default repeated completions are combined into retry history. For `go test -count` executions that must remain separate, use `--separate-executions` (API `SeparateExecutions`).
