@@ -187,8 +187,8 @@ func TestDetectFlakyTests(t *testing.T) {
 			Failed:  1,
 			Skipped: 1,
 			Flaky:   1,
-			Start:   1775245677561, // Includes the package start event
-			Stop:    1775245679648, // Includes the package completion event
+			Start:   1775245677812, // The event timestamp of the first processed event
+			Stop:    1775245679646, // The event timestamp of the last processed event
 		},
 		Extra: map[string]any{
 			"FailedBuild": true,
