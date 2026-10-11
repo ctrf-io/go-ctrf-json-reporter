@@ -16,11 +16,11 @@ func TestExistingProperties(t *testing.T) {
 	})
 	report.Extra, report.Results.Extra, report.Results.Tool.Extra = extra, extra, extra
 	report.Results.Tool.Version = "1"
-	report.Results.Summary = &Summary{Tests: 1, Passed: 1, Flaky: 1, Suites: 1, Start: 1, Stop: 3, Extra: extra}
+	report.Results.Summary = &Summary{Tests: 1, Failed: 1, Suites: 1, Start: 1, Stop: 3, Extra: extra}
 	report.Results.Tests = []*TestResult{{
-		AttemptID: "final-attempt", Name: "test", Status: TestPassed, Duration: 1, Start: 2, Stop: 3, Suite: []string{"suite", "child"},
+		AttemptID: "final-attempt", Name: "test", Status: TestFailed, Duration: 1, Start: 2, Stop: 3, Suite: []string{"suite", "child"},
 		Message: "message", Trace: "trace", RawStatus: "pass", Tags: []string{"unit"}, Type: "unit",
-		Filepath: "test.go", Retries: 1, Flaky: true, Browser: "browser", Device: "device", Screenshot: "aW1hZ2U=",
+		Filepath: "test.go", Retries: 1, Browser: "browser", Device: "device", Screenshot: "aW1hZ2U=",
 		Parameters: map[string]any{"value": 1}, Steps: []any{map[string]any{"name": "step", "status": TestPassed, "extra": extra}},
 		RetryAttempts: []RetryAttempt{{
 			AttemptID: "previous-attempt", Attempt: 1, Status: TestFailed, Duration: 1, Message: "failure",

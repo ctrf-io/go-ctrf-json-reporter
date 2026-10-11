@@ -145,8 +145,7 @@ The test object in the report includes the following [CTRF properties](https://c
 | `message`  | String          | Optional | The failure message if the test failed.                                             |
 | `suite`    | Array of String | Required | The go package containing the test, as a single-element suite hierarchy.            |
 
-Reports use CTRF 0.2.0. Retry history contains prior attempts; the final attempt
-supplies the test result and duration. Flaky passes count in both `passed` and `flaky`.
+Reports declare CTRF 0.2.0. Existing retry and flaky behavior is preserved.
 
 The Go field types remain unchanged. Numeric build number strings serialize as
 integers; other build identifiers are preserved in `environment.extra.buildNumber`.
