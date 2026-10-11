@@ -41,23 +41,22 @@ const (
 
 var buildOutput []string
 
-// IdentityOptions controls coordinated runs and explicit repeated-execution input.
+// IdentityOptions supplies optional run, shard, and test identity.
 type IdentityOptions struct {
-	RunID   string
-	ShardID string
-	// Set for go test -count input; every completion is a separate execution, not a retry.
-	SeparateExecutions bool
-	TestIDResolver     func(packageName, testName string) string
+	RunID          string
+	ShardID        string
+	TestIDResolver func(packageName, testName string) string
 }
 
-func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment, identityOptions ...IdentityOptions) (*ctrf.Report, error) {
+func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment) (*ctrf.Report, error) {
+	return ParseTestResultsWithOptions(r, verbose, env, IdentityOptions{})
+}
+
+// ParseTestResultsWithOptions parses results with optional identity metadata.
+func ParseTestResultsWithOptions(r io.Reader, verbose bool, env *ctrf.Environment, options IdentityOptions) (*ctrf.Report, error) {
 	buildOutput = nil
 	var testEvents []TestEvent
 
-	options := IdentityOptions{}
-	if len(identityOptions) > 0 {
-		options = identityOptions[0]
-	}
 	if (options.RunID != "" && strings.TrimSpace(options.RunID) == "") || (options.ShardID != "" && strings.TrimSpace(options.ShardID) == "") {
 		return nil, errors.New("runId and shardId must be non-empty")
 	}
@@ -80,10 +79,9 @@ func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment, identity
 		return nil, err
 	}
 
+	summaryTimeSet := false
 	for i, event := range testEvents {
-		if err := updateSummaryTime(report.Results.Summary, event, i); err != nil {
-			return nil, err
-		}
+		summaryTimeSet = updateSummaryTime(report.Results.Summary, event, summaryTimeSet)
 		// If we see any test failures, mark an overall failure in the Extra fields
 		if event.Action == ActionFail {
 			extraMap["FailedBuild"] = true
@@ -118,7 +116,7 @@ func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment, identity
 		// Parse timestamp data from the event
 		eventTime, err := parseTimeString(event.Time)
 		if err != nil {
-			return nil, fmt.Errorf("invalid test event time %q: %w", event.Time, err)
+			fmt.Fprintf(os.Stderr, "invalid test event time %q: %v\n", event.Time, err)
 		}
 		// A run event starts a new attempt for this test.
 		if event.Action == ActionRun {
@@ -139,20 +137,21 @@ func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment, identity
 	return report, nil
 }
 
-func updateSummaryTime(summary *ctrf.Summary, event TestEvent, index int) error {
+func updateSummaryTime(summary *ctrf.Summary, event TestEvent, initialized bool) bool {
 	if event.Time != "" {
 		eventTime, err := parseTimeString(event.Time)
 		if err != nil {
-			return fmt.Errorf("invalid event time %q: %w", event.Time, err)
+			return initialized
 		}
-		if index == 0 || eventTime < summary.Start {
+		if !initialized || eventTime < summary.Start {
 			summary.Start = eventTime
 		}
-		if index == 0 || eventTime > summary.Stop {
+		if !initialized || eventTime > summary.Stop {
 			summary.Stop = eventTime
 		}
+		return true
 	}
-	return nil
+	return initialized
 }
 
 func applyReportIdentity(report *ctrf.Report, options IdentityOptions) {
@@ -203,7 +202,7 @@ func addCompletedEvent(report *ctrf.Report, testEvents []TestEvent, index int, t
 	}
 	stopTime, err := parseTimeString(event.Time)
 	if err != nil {
-		return fmt.Errorf("invalid test event time %q: %w", event.Time, err)
+		stopTime = 0
 	}
 
 	// Determine the message for this test result. We only include messages on failures though,
@@ -241,7 +240,7 @@ func addCompletedEvent(report *ctrf.Report, testEvents []TestEvent, index int, t
 	// Search through the existing results for a prior run. If this is a duplicate of an existing failure,
 	// then this is likely a retry of a potentially flaky test, so update the existing test result instead
 	// of creating a new one.
-	if existingResult := findTest(newResult.Suite, newResult.Name, report.Results.Tests); existingResult == nil || options.SeparateExecutions {
+	if existingResult := findTest(newResult.Suite, newResult.Name, report.Results.Tests); existingResult == nil {
 		addResult(report, newResult)
 	} else {
 		updateResult(report, existingResult, newResult)

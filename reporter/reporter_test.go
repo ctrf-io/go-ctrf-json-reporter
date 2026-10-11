@@ -369,7 +369,8 @@ func TestRetryTransitions(t *testing.T) {
 }
 
 func TestEmptyAndPackageOnlyRuns(t *testing.T) {
-	for _, input := range []string{"", `{"Time":"2026-10-05T00:00:00Z","Action":"start","Package":"pkg"}
+	for _, input := range []string{"", `{"Time":"invalid","Action":"output","Package":"pkg"}
+{"Time":"2026-10-05T00:00:01Z","Action":"pass","Package":"pkg"}`, `{"Time":"2026-10-05T00:00:00Z","Action":"start","Package":"pkg"}
 {"Time":"2026-10-05T00:00:01Z","Action":"pass","Package":"pkg"}`, `{"Time":"2026-10-05T00:00:00Z","Action":"build-fail","Package":"pkg"}`} {
 		report, err := reporter.ParseTestResults(bytes.NewBufferString(input), false, nil)
 		require.NoError(t, err)

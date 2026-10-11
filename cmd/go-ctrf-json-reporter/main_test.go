@@ -156,8 +156,7 @@ func TestBuildNumber(t *testing.T) {
 	for _, value := range []string{"0", "100", "-1"} {
 		ctx := freshContext(nil, nil)
 		ctx.buildNumber = value
-		env, err := ctrfEnvFromFlags(ctx)
-		require.NoError(t, err)
+		env := ctrfEnvFromFlags(ctx)
 		data, err := json.Marshal(env)
 		require.NoError(t, err)
 		require.Contains(t, string(data), `"buildNumber":`+value)
@@ -165,7 +164,9 @@ func TestBuildNumber(t *testing.T) {
 	for _, value := range []string{"build-1", "1.5", "9223372036854775808"} {
 		ctx := freshContext(nil, nil)
 		ctx.buildNumber = value
-		_, err := ctrfEnvFromFlags(ctx)
-		require.ErrorContains(t, err, "buildNumber must be an integer")
+		env := ctrfEnvFromFlags(ctx)
+		data, err := json.Marshal(env)
+		require.NoError(t, err)
+		require.JSONEq(t, `{"extra":{"buildNumber":"`+value+`"}}`, string(data))
 	}
 }

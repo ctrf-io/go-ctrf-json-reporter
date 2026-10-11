@@ -145,45 +145,11 @@ The test object in the report includes the following [CTRF properties](https://c
 | `message`  | String          | Optional | The failure message if the test failed.                                             |
 | `suite`    | Array of String | Required | The go package containing the test, as a single-element suite hierarchy.            |
 
-## CTRF 0.2.0 compatibility
+Reports use CTRF 0.2.0. Retry history contains prior attempts; the final attempt
+supplies the test result and duration. Flaky passes count in both `passed` and `flaky`.
 
-Reports declare `specVersion: "0.2.0"`. This update corrects existing properties;
-it does not add the remaining optional CTRF fields.
-
-Breaking changes for Go package consumers:
-
-- `Environment.BuildNumber` is now `*int64`: nil omits it; a pointer to zero
-  emits `0`. The `-buildNumber` flag accepts integer values and rejects arbitrary
-  identifiers. Store nonnumeric build identifiers in `Environment.Extra`.
-- Every `Extra` field and `TestResult.Parameters` now uses `map[string]any` so
-  these properties serialize as objects. `TestResult.Steps` uses `[]ctrf.Step`
-  with `Name`, `Status`, and optional `Extra` fields. Custom step properties
-  belong in `Extra`.
-- `retryAttempts` contains only attempts completed before the final attempt,
-  numbered from 1. `retries` equals the history length. The test's top-level
-  status, duration, start, stop, and failure message describe the final attempt.
-  To calculate total execution time, sum the final duration and history durations.
-- A flaky test is a final pass after an earlier failure. It counts in `passed`;
-  `flaky` is a subset, not an additional outcome category.
-- Empty input and packages with no tests produce `tests: []`, with valid summary
-  timestamps. Summary bounds include package and build events.
-- Report writes reject invalid format/version/UUID, test and step statuses,
-  retry history, durations, screenshots, and non-JSON metadata. Invalid reports
-  do not truncate existing output files. `Validate` checks typed Go reports;
-  it is not a schema validator for arbitrary input JSON.
-
-Validate generated reports with the CTRF CLI:
-
-```bash
-ctrf validate-strict ctrf-report.json --spec-version 0.2.0
-```
-
-For a strict check covering all currently supported properties:
-
-```bash
-CTRF_COMPLIANCE_OUTPUT=/tmp/go-ctrf-all-properties.json go test ./ctrf -run TestExistingProperties -count=1
-ctrf validate-strict /tmp/go-ctrf-all-properties.json --spec-version 0.2.0
-```
+The Go field types remain unchanged. Numeric build number strings serialize as
+integers; other build identifiers are preserved in `environment.extra.buildNumber`.
 
 ## Troubleshoot
 

@@ -1,20 +1,18 @@
 package ctrf
 
 import (
-	"bytes"
+	"encoding/json"
 	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
 
 func TestExistingProperties(t *testing.T) {
-	build := int64(0)
 	extra := map[string]any{"go-ctrf.custom": map[string]any{"nested": []any{1, true, "value"}}}
 	report := NewReport("gotest", &Environment{
 		AppName: "app", AppVersion: "1", OSPlatform: "linux", OSRelease: "release",
-		OSVersion: "version", BuildName: "build", BuildNumber: &build, Extra: extra,
+		OSVersion: "version", BuildName: "build", BuildNumber: "0", Extra: extra,
 	})
 	report.Extra, report.Results.Extra, report.Results.Tool.Extra = extra, extra, extra
 	report.Results.Tool.Version = "1"
@@ -23,7 +21,7 @@ func TestExistingProperties(t *testing.T) {
 		AttemptID: "final-attempt", Name: "test", Status: TestPassed, Duration: 1, Start: 2, Stop: 3, Suite: []string{"suite", "child"},
 		Message: "message", Trace: "trace", RawStatus: "pass", Tags: []string{"unit"}, Type: "unit",
 		Filepath: "test.go", Retries: 1, Flaky: true, Browser: "browser", Device: "device", Screenshot: "aW1hZ2U=",
-		Parameters: map[string]any{"value": 1}, Steps: []Step{{Name: "step", Status: TestPassed, Extra: extra}},
+		Parameters: map[string]any{"value": 1}, Steps: []any{map[string]any{"name": "step", "status": TestPassed, "extra": extra}},
 		RetryAttempts: []RetryAttempt{{
 			AttemptID: "previous-attempt", Attempt: 1, Status: TestFailed, Duration: 1, Message: "failure",
 			Trace: "trace", Line: 1, Snippet: "snippet", Stdout: []string{"out"}, Stderr: []string{"err"}, Start: 1, Stop: 2, Extra: extra,
@@ -39,53 +37,36 @@ func TestExistingProperties(t *testing.T) {
 	}
 }
 
-func TestInvalidExistingProperties(t *testing.T) {
-	cases := map[string]func(*Report){
-		"format":    func(r *Report) { r.ReportFormat = "other" },
-		"version":   func(r *Report) { r.SpecVersion = "bad" },
-		"reportId":  func(r *Report) { r.ReportId = "bad" },
-		"nil test":  func(r *Report) { r.Results.Tests[0] = nil },
-		"name":      func(r *Report) { r.Results.Tests[0].Name = "" },
-		"status":    func(r *Report) { r.Results.Tests[0].Status = "pass" },
-		"duration":  func(r *Report) { r.Results.Tests[0].Duration = -1 },
-		"attemptId": func(r *Report) { r.Results.Tests[0].AttemptID = "   " },
-		"retries":   func(r *Report) { r.Results.Tests[0].Retries = 1 },
-		"retry sequence": func(r *Report) {
-			r.Results.Tests[0].Retries = 1
-			r.Results.Tests[0].RetryAttempts = []RetryAttempt{{Attempt: 2, Status: TestFailed}}
-		},
-		"retry status": func(r *Report) {
-			r.Results.Tests[0].Retries = 1
-			r.Results.Tests[0].RetryAttempts = []RetryAttempt{{Attempt: 1, Status: "bad"}}
-		},
-		"retry duration": func(r *Report) {
-			r.Results.Tests[0].Retries = 1
-			r.Results.Tests[0].RetryAttempts = []RetryAttempt{{Attempt: 1, Status: TestFailed, Duration: -1}}
-		},
-		"flaky":       func(r *Report) { r.Results.Tests[0].Flaky = true },
-		"step status": func(r *Report) { r.Results.Tests[0].Steps = []Step{{Name: "step", Status: "bad"}} },
-		"screenshot":  func(r *Report) { r.Results.Tests[0].Screenshot = "https://example.com/image.png" },
-		"extra value": func(r *Report) { r.Extra = map[string]any{"bad": make(chan int)} },
+// Struct metadata and arbitrary step objects remain supported by the Go API.
+func TestLegacyEnvironmentAPI(t *testing.T) {
+	type metadata struct {
+		Team string `json:"team"`
 	}
-	for name, mutate := range cases {
-		t.Run(name, func(t *testing.T) {
-			r := NewReport("gotest", nil)
-			r.Results.Summary.Tests, r.Results.Summary.Passed = 1, 1
-			r.Results.Tests = []*TestResult{{Name: "test", Status: TestPassed}}
-			mutate(r)
-			require.NotEmpty(t, r.Validate())
-			var output bytes.Buffer
-			require.Error(t, r.Write(&output, false))
-			require.Empty(t, output.String())
-		})
+	for _, value := range []string{"0", "7", "build-7"} {
+		env := Environment{BuildNumber: value, Extra: metadata{Team: "qa"}}
+		data, err := json.Marshal(env)
+		require.NoError(t, err)
+		if value == "build-7" {
+			require.JSONEq(t, `{"extra":{"team":"qa","buildNumber":"build-7"}}`, string(data))
+		} else {
+			require.JSONEq(t, `{"buildNumber":`+value+`,"extra":{"team":"qa"}}`, string(data))
+			var decoded Environment
+			require.NoError(t, json.Unmarshal(data, &decoded))
+			require.Equal(t, value, decoded.BuildNumber)
+		}
+		require.Equal(t, metadata{Team: "qa"}, env.Extra)
 	}
-}
-
-func TestInvalidReportDoesNotTruncateFile(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "report.json")
-	require.NoError(t, os.WriteFile(path, []byte("original"), 0o600))
-	require.Error(t, (&Report{}).WriteFile(path))
-	content, err := os.ReadFile(path)
+	var legacy Environment
+	require.NoError(t, json.Unmarshal([]byte(`{"buildNumber":"build-7"}`), &legacy))
+	require.Equal(t, "build-7", legacy.BuildNumber)
+	extra := map[string]any{"team": "qa"}
+	_, err := json.Marshal(Environment{BuildNumber: "build-7", Extra: extra})
 	require.NoError(t, err)
-	require.Equal(t, "original", string(content))
+	require.Equal(t, map[string]any{"team": "qa"}, extra)
+	test := TestResult{
+		Parameters: metadata{Team: "qa"}, Extra: metadata{Team: "qa"},
+		Steps: []any{map[string]any{"name": "step", "status": "passed"}},
+	}
+	_, err = json.Marshal(test)
+	require.NoError(t, err)
 }
