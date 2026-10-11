@@ -24,6 +24,8 @@ type commandContext struct {
 
 // commandFlags stores parsed command line flags.
 type commandFlags struct {
+	runID       string
+	shardID     string
 	outputFile  string
 	verbose     bool
 	quiet       bool
@@ -66,7 +68,9 @@ func execute(cmd *commandContext) error {
 	env := ctrfEnvFromFlags(cmd)
 	effectiveVerbose := cmd.verbose && !cmd.quiet
 
-	report, err := reporter.ParseTestResults(cmd.reader, effectiveVerbose, env)
+	report, err := reporter.ParseTestResultsWithOptions(cmd.reader, effectiveVerbose, env, reporter.IdentityOptions{
+		RunID: cmd.runID, ShardID: cmd.shardID,
+	})
 	if err != nil {
 		return fmt.Errorf("error parsing test results: %w", err)
 	}
@@ -108,6 +112,8 @@ func execute(cmd *commandContext) error {
 }
 
 func registerFlags(flags *commandFlags) {
+	flag.StringVar(&flags.runID, "runId", "", "Logical run ID shared by coordinated reports")
+	flag.StringVar(&flags.shardID, "shardId", "", "Partition producing this document")
 	flag.BoolVar(&flags.verbose, "verbose", false, "Enable verbose output")
 	flag.BoolVar(&flags.verbose, "v", false, "Enable verbose output (shorthand)")
 	flag.BoolVar(&flags.quiet, "quiet", false, "Disable all log output")
@@ -134,7 +140,6 @@ func ctrfEnvFromFlags(cmd *commandContext) *ctrf.Environment {
 		cmd.buildNumber == "" {
 		return nil
 	}
-
 	return &ctrf.Environment{
 		AppName:     cmd.appName,
 		AppVersion:  cmd.appVersion,

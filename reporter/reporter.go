@@ -36,10 +36,21 @@ const (
 var buildOutput []string
 
 func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment) (*ctrf.Report, error) {
+	return ParseTestResultsWithOptions(r, verbose, env, IdentityOptions{})
+}
+
+// ParseTestResultsWithOptions parses results with optional identity metadata.
+//
+//nolint:cyclop,gocognit,gocyclo // Preserve the established parser flow; refactoring is outside this change.
+func ParseTestResultsWithOptions(r io.Reader, verbose bool, env *ctrf.Environment, options IdentityOptions) (*ctrf.Report, error) {
 	var testEvents []TestEvent
 	decoder := json.NewDecoder(r)
 
+	if err := validateIdentityOptions(options); err != nil {
+		return nil, err
+	}
 	report := ctrf.NewReport("gotest", env)
+	applyReportIdentity(report, options)
 	report.Results.Summary.Start = time.Now().UnixNano() / int64(time.Millisecond)
 
 	testStartTimes := make(map[string]int64)
@@ -146,6 +157,10 @@ func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment) (*ctrf.R
 				Stop:     stopTime,
 			}
 
+			if err := applyTestIdentity(newResult, event.Package, options); err != nil {
+				return nil, err
+			}
+
 			// Search through the existing results for a prior run. If this is a duplicate of an existing failure,
 			// then this is likely a retry of a potentially flaky test, so update the existing test result instead
 			// of creating a new one.
@@ -155,6 +170,11 @@ func ParseTestResults(r io.Reader, verbose bool, env *ctrf.Environment) (*ctrf.R
 				updateResult(report, existingResult, newResult)
 			}
 		}
+	}
+
+	// Keep empty reports writable without changing event timing for test results.
+	if len(report.Results.Tests) == 0 {
+		report.Results.Summary.Stop = report.Results.Summary.Start
 	}
 
 	enrichReportWithFilenames(report)
@@ -191,12 +211,13 @@ func updateResult(report *ctrf.Report, oldResult, newResult *ctrf.TestResult) {
 	if oldResult.RetryAttempts == nil {
 		oldResult.Retries = 1
 		oldResult.RetryAttempts = append(oldResult.RetryAttempts, ctrf.RetryAttempt{
-			Attempt:  1,
-			Status:   oldResult.Status,
-			Message:  oldResult.Message,
-			Duration: oldResult.Duration,
-			Start:    oldResult.Start,
-			Stop:     oldResult.Stop,
+			AttemptID: oldResult.AttemptID,
+			Attempt:   1,
+			Status:    oldResult.Status,
+			Message:   oldResult.Message,
+			Duration:  oldResult.Duration,
+			Start:     oldResult.Start,
+			Stop:      oldResult.Stop,
 		})
 	}
 
@@ -226,13 +247,15 @@ func updateResult(report *ctrf.Report, oldResult, newResult *ctrf.TestResult) {
 	// Now add the new attempt to the retries
 	oldResult.Retries++
 	oldResult.RetryAttempts = append(oldResult.RetryAttempts, ctrf.RetryAttempt{
-		Attempt:  oldResult.Retries,
-		Status:   newResult.Status,
-		Message:  newResult.Message,
-		Duration: newResult.Duration,
-		Start:    newResult.Start,
-		Stop:     newResult.Stop,
+		AttemptID: newResult.AttemptID,
+		Attempt:   oldResult.Retries,
+		Status:    newResult.Status,
+		Message:   newResult.Message,
+		Duration:  newResult.Duration,
+		Start:     newResult.Start,
+		Stop:      newResult.Stop,
 	})
+	oldResult.AttemptID = newResult.AttemptID
 }
 
 // testNameKey generates a unique key for a map lookup based on the test name and suite.

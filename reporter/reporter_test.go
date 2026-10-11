@@ -35,6 +35,21 @@ func Test_Enrich_Reporter(t *testing.T) {
 	actual, err := reporter.ParseTestResults(bytes.NewBufferString(input), false, &ctrf.Environment{})
 
 	require.NoError(t, err)
+	for _, result := range actual.Results.Tests {
+		require.NotEmpty(t, result.TestID)
+		require.NotEmpty(t, result.ExecutionID)
+		require.NotEmpty(t, result.AttemptID)
+		require.Empty(t, actual.RunID)
+		if len(result.RetryAttempts) > 0 {
+			require.Equal(t, result.AttemptID, result.RetryAttempts[len(result.RetryAttempts)-1].AttemptID)
+		}
+		result.AttemptID = ""
+		result.TestID, result.ExecutionID = "", ""
+		for i := range result.RetryAttempts {
+			require.NotEmpty(t, result.RetryAttempts[i].AttemptID)
+			result.RetryAttempts[i].AttemptID = ""
+		}
+	}
 	assert.Equal(t, expected.Results.Tests, actual.Results.Tests)
 }
 
@@ -146,6 +161,21 @@ func Test_Enrich_ReporterWithUnorderedMessages(t *testing.T) {
 	actual, err := reporter.ParseTestResults(bytes.NewBufferString(input), false, &ctrf.Environment{})
 
 	require.NoError(t, err)
+	for _, result := range actual.Results.Tests {
+		require.NotEmpty(t, result.TestID)
+		require.NotEmpty(t, result.ExecutionID)
+		require.NotEmpty(t, result.AttemptID)
+		require.Empty(t, actual.RunID)
+		if len(result.RetryAttempts) > 0 {
+			require.Equal(t, result.AttemptID, result.RetryAttempts[len(result.RetryAttempts)-1].AttemptID)
+		}
+		result.AttemptID = ""
+		result.TestID, result.ExecutionID = "", ""
+		for i := range result.RetryAttempts {
+			require.NotEmpty(t, result.RetryAttempts[i].AttemptID)
+			result.RetryAttempts[i].AttemptID = ""
+		}
+	}
 	assert.Equal(t, expected.Results.Tests, actual.Results.Tests)
 }
 
@@ -295,6 +325,34 @@ func TestDetectFlakyTests(t *testing.T) {
 
 	require.NoError(t, err)
 	assert.Equal(t, expected.Results.Summary, actual.Results.Summary)
+	for _, result := range actual.Results.Tests {
+		require.NotEmpty(t, result.TestID)
+		require.NotEmpty(t, result.ExecutionID)
+		require.NotEmpty(t, result.AttemptID)
+		require.Empty(t, actual.RunID)
+		if len(result.RetryAttempts) > 0 {
+			require.Equal(t, result.AttemptID, result.RetryAttempts[len(result.RetryAttempts)-1].AttemptID)
+		}
+		result.AttemptID = ""
+		result.TestID, result.ExecutionID = "", ""
+		for i := range result.RetryAttempts {
+			require.NotEmpty(t, result.RetryAttempts[i].AttemptID)
+			result.RetryAttempts[i].AttemptID = ""
+		}
+	}
 	assert.Equal(t, expected.Results.Tests, actual.Results.Tests)
 	assert.Equal(t, expected.Results.Extra, actual.Results.Extra)
+}
+
+func TestEmptyAndPackageOnlyRuns(t *testing.T) {
+	for _, input := range []string{"", `{"Time":"invalid","Action":"output","Package":"pkg"}
+{"Time":"2026-10-05T00:00:01Z","Action":"pass","Package":"pkg"}`, `{"Time":"2026-10-05T00:00:00Z","Action":"start","Package":"pkg"}
+{"Time":"2026-10-05T00:00:01Z","Action":"pass","Package":"pkg"}`, `{"Time":"2026-10-05T00:00:00Z","Action":"build-fail","Package":"pkg"}`} {
+		report, err := reporter.ParseTestResults(bytes.NewBufferString(input), false, nil)
+		require.NoError(t, err)
+		require.Empty(t, report.Validate())
+		require.NotNil(t, report.Results.Tests)
+		require.Empty(t, report.Results.Tests)
+		require.GreaterOrEqual(t, report.Results.Summary.Stop, report.Results.Summary.Start)
+	}
 }

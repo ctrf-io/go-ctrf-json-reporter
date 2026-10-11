@@ -62,7 +62,7 @@ func TestRequiredProperties(t *testing.T) {
 
 	expectedJson := `{
   "reportFormat": "CTRF",
-  "specVersion": "0.0.0",
+  "specVersion": "0.2.0",
   "timestamp": "0001-01-01T00:00:00Z",
   "results": {
     "tool": {

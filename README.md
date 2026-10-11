@@ -39,6 +39,8 @@ Explore more <a href="https://www.ctrf.io/integrations">integrations</a>
 
 ```json
 {
+  "reportFormat": "CTRF",
+  "specVersion": "0.2.0",
   "results": {
     "tool": {
       "name": "gotest"
@@ -63,7 +65,7 @@ Explore more <a href="https://www.ctrf.io/integrations">integrations</a>
     "environment": {
       "appName": "MyApp",
       "buildName": "MyBuild",
-      "buildNumber": "1"
+      "buildNumber": 1
     }
   }
 }
