@@ -1,0 +1,742 @@
+{
+  "conformance/property/reportFormat": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/specVersion": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/reportId": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/runId": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/timestamp": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/generatedBy": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/extra": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/results.tool": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/results.tool.name": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/results.tool.version": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tool.extra": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.summary": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/results.summary.tests": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/results.summary.passed": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/results.summary.failed": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/results.summary.skipped": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/results.summary.pending": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/results.summary.other": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/results.summary.flaky": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/results.summary.suites": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.summary.start": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/results.summary.stop": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/results.summary.duration": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.summary.extra": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/results.tests[].id": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].testId": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/results.tests[].executionId": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/results.tests[].attemptId": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/results.tests[].name": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/results.tests[].status": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/results.tests[].duration": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/results.tests[].start": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/results.tests[].stop": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/results.tests[].suite": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/results.tests[].message": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/results.tests[].trace": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].snippet": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].ai": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].line": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].rawStatus": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].tags": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].labels": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].type": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].filePath": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/results.tests[].retries": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/results.tests[].retryAttempts": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/results.tests[].retryAttempts[].attempt": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/results.tests[].retryAttempts[].attemptId": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/results.tests[].retryAttempts[].status": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/results.tests[].retryAttempts[].duration": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/results.tests[].retryAttempts[].message": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/results.tests[].retryAttempts[].trace": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].retryAttempts[].line": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].retryAttempts[].snippet": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].retryAttempts[].stdout": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].retryAttempts[].stderr": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].retryAttempts[].start": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/results.tests[].retryAttempts[].stop": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/results.tests[].retryAttempts[].attachments": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].retryAttempts[].attachments[].attachmentId": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].retryAttempts[].attachments[].name": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].retryAttempts[].attachments[].contentType": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].retryAttempts[].attachments[].path": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].retryAttempts[].attachments[].extra": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].retryAttempts[].extra": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].flaky": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/results.tests[].stdout": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].stderr": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].threadId": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].browser": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].device": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].screenshot": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].attachments": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].attachments[].attachmentId": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].attachments[].name": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].attachments[].contentType": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].attachments[].path": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].attachments[].extra": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].parameters": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].steps": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].steps[].name": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].steps[].status": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].steps[].extra": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].insights": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].insights.passRate": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].insights.passRate.current": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].insights.passRate.baseline": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].insights.passRate.change": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].insights.failRate": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].insights.failRate.current": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].insights.failRate.baseline": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].insights.failRate.change": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].insights.flakyRate": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].insights.flakyRate.current": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].insights.flakyRate.baseline": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].insights.flakyRate.change": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].insights.averageTestDuration": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].insights.averageTestDuration.current": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].insights.averageTestDuration.baseline": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].insights.averageTestDuration.change": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].insights.p95TestDuration": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].insights.p95TestDuration.current": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].insights.p95TestDuration.baseline": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].insights.p95TestDuration.change": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].insights.executedInRuns": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].insights.extra": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.tests[].extra": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.environment": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/results.environment.reportName": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.environment.appName": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/results.environment.appVersion": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/results.environment.buildId": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.environment.buildName": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/results.environment.buildNumber": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/results.environment.buildUrl": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.environment.repositoryName": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.environment.repositoryUrl": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.environment.commit": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.environment.branchName": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.environment.osPlatform": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/results.environment.osRelease": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/results.environment.osVersion": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/results.environment.testEnvironment": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.environment.shardId": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/results.environment.healthy": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/results.environment.extra": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/results.extra": {
+    "supported": true,
+    "reason": "Emitted by the Go JSON parser/serializer or supported CLI metadata options; checked against independent source observations."
+  },
+  "conformance/property/insights": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/insights.passRate": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/insights.passRate.current": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/insights.passRate.baseline": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/insights.passRate.change": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/insights.failRate": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/insights.failRate.current": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/insights.failRate.baseline": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/insights.failRate.change": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/insights.flakyRate": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/insights.flakyRate.current": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/insights.flakyRate.baseline": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/insights.flakyRate.change": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/insights.averageRunDuration": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/insights.averageRunDuration.current": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/insights.averageRunDuration.baseline": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/insights.averageRunDuration.change": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/insights.p95RunDuration": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/insights.p95RunDuration.current": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/insights.p95RunDuration.baseline": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/insights.p95RunDuration.change": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/insights.averageTestDuration": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/insights.averageTestDuration.current": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/insights.averageTestDuration.baseline": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/insights.averageTestDuration.change": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/insights.runsAnalyzed": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/insights.extra": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/baseline": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/baseline.reportId": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/baseline.timestamp": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/baseline.source": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/baseline.buildNumber": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/baseline.buildName": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/baseline.buildUrl": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/baseline.commit": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/property/baseline.extra": {
+    "supported": false,
+    "reason": "The Go JSON parser and CLI do not emit this optional property."
+  },
+  "conformance/report/utf8-without-bom": {
+    "supported": true,
+    "reason": "Controlled, rerun, repeated and sharded source evidence is supplied."
+  },
+  "conformance/report/single-json-object": {
+    "supported": true,
+    "reason": "Controlled, rerun, repeated and sharded source evidence is supplied."
+  },
+  "conformance/report/declares-supported-contract": {
+    "supported": true,
+    "reason": "Controlled, rerun, repeated and sharded source evidence is supplied."
+  },
+  "conformance/report/summary-matches-final-results": {
+    "supported": true,
+    "reason": "Controlled, rerun, repeated and sharded source evidence is supplied."
+  },
+  "conformance/report/summary-matches-flaky-results": {
+    "supported": true,
+    "reason": "Controlled, rerun, repeated and sharded source evidence is supplied."
+  },
+  "conformance/report/orders-start-and-stop": {
+    "supported": true,
+    "reason": "Controlled, rerun, repeated and sharded source evidence is supplied."
+  },
+  "conformance/report/history-requires-retry-count": {
+    "supported": true,
+    "reason": "Controlled, rerun, repeated and sharded source evidence is supplied."
+  },
+  "conformance/report/positive-retries-require-history": {
+    "supported": true,
+    "reason": "Controlled, rerun, repeated and sharded source evidence is supplied."
+  },
+  "conformance/report/zero-retries-omit-history": {
+    "supported": true,
+    "reason": "Controlled, rerun, repeated and sharded source evidence is supplied."
+  },
+  "conformance/report/retry-count-matches-history-length": {
+    "supported": true,
+    "reason": "Controlled, rerun, repeated and sharded source evidence is supplied."
+  },
+  "conformance/report/history-orders-contiguous-attempts": {
+    "supported": true,
+    "reason": "Controlled, rerun, repeated and sharded source evidence is supplied."
+  },
+  "conformance/report/history-excludes-final-attempt": {
+    "supported": true,
+    "reason": "Controlled, rerun, repeated and sharded source evidence is supplied."
+  },
+  "conformance/report/flaky-matches-attempt-outcomes": {
+    "supported": true,
+    "reason": "Controlled, rerun, repeated and sharded source evidence is supplied."
+  },
+  "conformance/report/case-identity-stable-across-runs": {
+    "supported": true,
+    "reason": "Controlled, rerun, repeated and sharded source evidence is supplied."
+  },
+  "conformance/report/execution-identity-distinguishes-executions": {
+    "supported": true,
+    "reason": "Controlled, rerun, repeated and sharded source evidence is supplied."
+  },
+  "conformance/report/attempt-identity-scoped-to-execution": {
+    "supported": true,
+    "reason": "Controlled, rerun, repeated and sharded source evidence is supplied."
+  },
+  "conformance/report/attachment-identity-scoped-to-parent": {
+    "supported": false,
+    "reason": "The producer does not emit attachment identities."
+  },
+  "conformance/report/document-identity-follows-emission": {
+    "supported": true,
+    "reason": "Controlled, rerun, repeated and sharded source evidence is supplied."
+  },
+  "conformance/report/coordinates-run-and-shard-identity": {
+    "supported": true,
+    "reason": "Controlled, rerun, repeated and sharded source evidence is supplied."
+  },
+  "conformance/report/respects-reserved-extension-ownership": {
+    "supported": true,
+    "reason": "Controlled, rerun, repeated and sharded source evidence is supplied."
+  }
+}

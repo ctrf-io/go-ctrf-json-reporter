@@ -1,0 +1,19 @@
+package fixture
+
+import (
+ "os"
+ "testing"
+ "time"
+)
+
+func TestPass(t *testing.T) {time.Sleep(12*time.Millisecond)}
+func TestFail(t *testing.T) {time.Sleep(15*time.Millisecond);t.Fatal("independent failure")}
+func TestSkip(t *testing.T) {t.Skip("independent skip")}
+func TestNested(t *testing.T) {t.Run("same",func(t *testing.T){time.Sleep(11*time.Millisecond)})}
+func TestParallelA(t *testing.T) {t.Parallel();time.Sleep(25*time.Millisecond)}
+func TestParallelB(t *testing.T) {t.Parallel();time.Sleep(25*time.Millisecond)}
+func TestRetry(t *testing.T) {
+ time.Sleep(17*time.Millisecond)
+ if os.Getenv("CTRF_FIXTURE_OUTCOME")=="failed" {t.Fatal("independent retry failure")}
+}
+func TestPanic(t *testing.T) {panic("independent panic")}

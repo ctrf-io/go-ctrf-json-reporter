@@ -7,6 +7,8 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+permissions:
+  contents: read
 
 jobs:
   lint:
@@ -31,6 +33,7 @@ jobs:
 
   test:
     strategy:
+      fail-fast: false
       matrix:
         go-version: ['1.19.x', 'oldstable', 'stable' ]
         lint-and-coverage: [ false ]
@@ -40,6 +43,12 @@ jobs:
 
     runs-on: ubuntu-latest
     needs: [lint]
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: write
+    env:
+      GORACE: halt_on_error=1
 
     steps:
       - name: Checkout code
@@ -49,24 +58,116 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version: ${{ matrix.go-version }}
+          cache-dependency-path: |
+            go.sum
+            tests/go.sum
+
+      - name: Prepare result paths
+        run: |
+          echo "CTRF_STANDARD_ARTIFACTS=$RUNNER_TEMP/go-reporter-tests" >> "$GITHUB_ENV"
+          mkdir -p "$RUNNER_TEMP/go-reporter-tests"
 
       - name: Install dependencies
+        id: install
+        run: go mod download
+
+      - name: Install isolated test tooling
+        id: tooling
+        working-directory: tests
         run: go mod download
 
       - name: Build
         run: go build -v ./...
 
-      - name: Test with the Go CLI
+      - name: Reporter tests and native controls
+        if: ${{ !cancelled() && steps.install.outcome == 'success' && steps.tooling.outcome == 'success' }}
+        env:
+          CTRF_COVERAGE: ${{ matrix.lint-and-coverage }}
+        run: bash tests/run.sh ordinary
+
+      - name: Check native tooling
+        if: ${{ !cancelled() && steps.tooling.outcome == 'success' }}
+        working-directory: tests
         run: |
-          go version
-          if [ ${{ matrix.lint-and-coverage }} = true ]; then
-              GO_TEST_OPTS="-covermode=atomic -coverprofile=coverage.out"
-          fi
-          export GORACE="halt_on_error=1"
-          go test -race $GO_TEST_OPTS ./...
+          test -z "$(gofmt -l .)"
+          go vet ./...
+
+      - name: Shared checker controls
+        if: ${{ !cancelled() && steps.tooling.outcome == 'success' }}
+        run: bash tests/run.sh checker
+
+      - name: Unit conformance
+        if: ${{ !cancelled() && steps.tooling.outcome == 'success' }}
+        run: bash tests/run.sh unit
+
+      - name: Installed CLI and real Go test conformance
+        if: ${{ !cancelled() && steps.install.outcome == 'success' && steps.tooling.outcome == 'success' }}
+        run: bash tests/run.sh integration
 
       - name: Reporting coverage
-        if: matrix.lint-and-coverage
+        if: ${{ !cancelled() && matrix.lint-and-coverage && steps.install.outcome == 'success' }}
         uses: shogo82148/actions-goveralls@v1
         with:
           path-to-profile: coverage.out
+
+      - name: Publish reporter-conformance
+        uses: ctrf-io/github-test-reporter@v1
+        if: ${{ !cancelled() && steps.tooling.outcome == 'success' }}
+        with:
+          report-path: '${{ runner.temp }}/go-reporter-tests/reports/*.json'
+          title: 'Reporter conformance — contract families (Go ${{ matrix.go-version }}, coverage ${{ matrix.lint-and-coverage }})'
+          summary-report: true
+          suite-folded-report: true
+          group-by: suite
+          pull-request: ${{ matrix.lint-and-coverage == true && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
+          overwrite-comment: true
+          comment-tag: reporter-conformance
+          collapse-large-reports: true
+          upload-artifact: true
+          artifact-name: reporter-conformance-go-${{ matrix.go-version }}-coverage-${{ matrix.lint-and-coverage }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish reporter-checker
+        uses: ctrf-io/github-test-reporter@v1
+        if: ${{ !cancelled() && steps.tooling.outcome == 'success' }}
+        with:
+          report-path: '${{ runner.temp }}/go-reporter-tests/checker-reports/*.json'
+          title: 'Shared checker controls (Go ${{ matrix.go-version }}, coverage ${{ matrix.lint-and-coverage }})'
+          summary-report: true
+          suite-folded-report: true
+          group-by: suite
+          pull-request: ${{ matrix.lint-and-coverage == true && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
+          overwrite-comment: true
+          comment-tag: reporter-checker
+          collapse-large-reports: true
+          upload-artifact: true
+          artifact-name: reporter-checker-go-${{ matrix.go-version }}-coverage-${{ matrix.lint-and-coverage }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish reporter-tests
+        uses: ctrf-io/github-test-reporter@v1
+        if: ${{ !cancelled() && steps.tooling.outcome == 'success' }}
+        with:
+          report-path: '${{ runner.temp }}/go-reporter-tests/reporter-reports/*.json'
+          title: 'Reporter tests (Go ${{ matrix.go-version }}, coverage ${{ matrix.lint-and-coverage }})'
+          summary-report: true
+          test-report: true
+          pull-request: ${{ matrix.lint-and-coverage == true && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
+          overwrite-comment: true
+          comment-tag: reporter-tests
+          collapse-large-reports: true
+          upload-artifact: true
+          artifact-name: reporter-tests-go-${{ matrix.go-version }}-coverage-${{ matrix.lint-and-coverage }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Retain all results and diagnostics
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: go-reporter-tests-${{ matrix.go-version }}-coverage-${{ matrix.lint-and-coverage }}
+          path: ${{ runner.temp }}/go-reporter-tests/
+          include-hidden-files: true
+          if-no-files-found: warn

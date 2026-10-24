@@ -2,6 +2,8 @@ package reporter_test
 
 import (
 	"bytes"
+	"io"
+	"os"
 	"testing"
 
 	"github.com/ctrf-io/go-ctrf-json-reporter/ctrf"
@@ -321,7 +323,12 @@ func TestDetectFlakyTests(t *testing.T) {
 {"Time":"2026-04-03T13:47:59.648315-06:00","Action":"output","Package":"github.com/ctrf-io/go-ctrf-json-reporter/examples/flaky","Output":"ok  \tgithub.com/ctrf-io/go-ctrf-json-reporter/examples/flaky\t0.235s\n"}
 {"Time":"2026-04-03T13:47:59.648334-06:00","Action":"pass","Package":"github.com/ctrf-io/go-ctrf-json-reporter/examples/flaky","Elapsed":0.235}`
 
-	actual, err := reporter.ParseTestResults(bytes.NewBufferString(input), true, &ctrf.Environment{})
+	var actual *ctrf.Report
+	var err error
+	output := captureFixtureOutput(t, func() {
+		actual, err = reporter.ParseTestResults(bytes.NewBufferString(input), true, &ctrf.Environment{})
+	})
+	require.Contains(t, output, "=== RUN   Test_Flaky_Fail")
 
 	require.NoError(t, err)
 	assert.Equal(t, expected.Results.Summary, actual.Results.Summary)
@@ -355,4 +362,27 @@ func TestEmptyAndPackageOnlyRuns(t *testing.T) {
 		require.Empty(t, report.Results.Tests)
 		require.GreaterOrEqual(t, report.Results.Summary.Stop, report.Results.Summary.Start)
 	}
+}
+
+// captureFixtureOutput keeps verbose subject logs out of the Go test protocol.
+// In particular, Go 1.19 otherwise mistakes fixture === RUN lines for real tests.
+// Calls must stay serial with other process-stdout captures in this package.
+func captureFixtureOutput(t *testing.T, run func()) string {
+	t.Helper()
+	output, err := os.CreateTemp(t.TempDir(), "subject-stdout-")
+	if err != nil {
+		t.Fatal(err)
+	}
+	original := os.Stdout
+	os.Stdout = output
+	defer func() { os.Stdout = original; _ = output.Close() }()
+	run()
+	if _, err := output.Seek(0, io.SeekStart); err != nil {
+		t.Fatal(err)
+	}
+	b, err := io.ReadAll(output)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return string(b)
 }
