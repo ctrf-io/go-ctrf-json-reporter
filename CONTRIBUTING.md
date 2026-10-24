@@ -48,3 +48,30 @@ Your contributions are sincerely appreciated. We want to make contributing to th
 - Proposing new features
 
 Thank you for your interest in contributing
+
+## Standard conformance tests
+
+Keep existing reporter tests and standard conformance separate. See
+[Standard conformance](tests/standard/conformance/README.md) for suite boundaries,
+capabilities, result handling and CI reporting.
+
+```sh
+go test ./...
+bash tests/run.sh ordinary
+bash tests/run.sh standard
+```
+
+The standard harness uses an isolated Go module under `tests/`; it requires the
+repository's supported Go version and available module dependencies. It adds no
+JavaScript runtime or production validation dependency.
+
+When changing schema/specification behavior or reporter output, assess affected
+shared family IDs, capabilities, source expectations and both conformance levels.
+Keep unsupported optional entries visible with reasons. Missing fixtures fail;
+known defects use strict expected-failure records rather than skips. Keep native
+fixture, matcher and reporting controls outside `tests/standard`. Deliberate common
+checker changes require source provenance, control updates and adoption review.
+
+CI retains ordinary reporter tests, contract results and checker controls as
+separate scopes. The stable Go coverage job updates their separate PR comments;
+fork runs retain build summaries and artifacts. Release workflows remain separate.

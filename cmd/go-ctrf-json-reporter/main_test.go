@@ -117,7 +117,8 @@ func TestExecute(t *testing.T) {
 			ctx.verbose = true
 			ctx.outputFile = output
 
-			err = execute(ctx)
+			subjectOutput := captureFixtureOutput(t, func() { err = execute(ctx) })
+			require.Contains(t, subjectOutput, "=== RUN   TestExecute")
 			require.NoError(t, err)
 			require.FileExists(t, output)
 
@@ -169,4 +170,27 @@ func TestBuildNumber(t *testing.T) {
 		require.NoError(t, err)
 		require.JSONEq(t, `{"extra":{"buildNumber":"`+value+`"}}`, string(data))
 	}
+}
+
+// captureFixtureOutput keeps verbose subject logs out of the Go test protocol.
+// In particular, Go 1.19 otherwise mistakes fixture === RUN lines for real tests.
+// Calls must stay serial with other process-stdout captures in this package.
+func captureFixtureOutput(t *testing.T, run func()) string {
+	t.Helper()
+	output, err := os.CreateTemp(t.TempDir(), "subject-stdout-")
+	if err != nil {
+		t.Fatal(err)
+	}
+	original := os.Stdout
+	os.Stdout = output
+	defer func() { os.Stdout = original; _ = output.Close() }()
+	run()
+	if _, err := output.Seek(0, io.SeekStart); err != nil {
+		t.Fatal(err)
+	}
+	b, err := io.ReadAll(output)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return string(b)
 }

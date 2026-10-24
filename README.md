@@ -167,6 +167,9 @@ go build -o go-ctrf-json-reporter ./cmd/go-ctrf-json-reporter
 go test ./...
 ```
 
+Run the [standard conformance suites](tests/standard/conformance/README.md) with
+`bash tests/run.sh standard`. Existing reporter tests remain separate.
+
 ### Testing the Reporter
 
 ```bash
