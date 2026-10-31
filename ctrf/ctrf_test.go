@@ -20,7 +20,7 @@ func TestRequiredProperties(t *testing.T) {
 				Name: "my tool",
 			},
 			Summary: &Summary{
-				Tests:   21,
+				Tests:   20,
 				Passed:  6,
 				Failed:  5,
 				Pending: 4,
@@ -69,7 +69,7 @@ func TestRequiredProperties(t *testing.T) {
       "name": "my tool"
     },
     "summary": {
-      "tests": 21,
+      "tests": 20,
       "passed": 6,
       "failed": 5,
       "pending": 4,
@@ -249,4 +249,11 @@ type validationTestCase struct {
 	Name           string   `json:"name"          yaml:"name"`
 	Report         string   `json:"report"        yaml:"report"`
 	ExpectedErrors []string `json:"expected_errors" yaml:"expected_errors"`
+}
+
+func TestSummaryFlakyIsSubsetOfPassed(t *testing.T) {
+	summary := &Summary{Tests: 1, Passed: 1, Flaky: 1, Start: 1, Stop: 2}
+	assert.Empty(t, summary.Validate())
+	summary.Tests = 2
+	assert.NotEmpty(t, summary.Validate(), "flaky must not count as another test")
 }

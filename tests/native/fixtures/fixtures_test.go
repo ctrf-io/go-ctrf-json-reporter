@@ -2,7 +2,6 @@ package fixtures
 
 import (
 	"encoding/json"
-	"errors"
 	s "github.com/ctrf-io/go-ctrf-json-reporter/tests/standard/conformance/shared"
 	"strings"
 	"testing"
@@ -66,47 +65,48 @@ func TestSourceObserverRejectsWrongOutcome(t *testing.T) {
 		t.Fatal("wrong native outcome accepted")
 	}
 }
-func TestNativeExpectedFailureMatchers(t *testing.T) {
+func TestRetryConformanceWithoutExceptions(t *testing.T) {
 	c, err := Unit()
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, e := range s.Catalogue.Entries {
-		issue := KnownIssue(e)
-		if issue == nil {
-			continue
-		}
-		e := e
-		t.Run(e.ID, func(t *testing.T) {
-			for _, name := range issue.Samples["unit"] {
-				var sm s.Sample
-				for _, candidate := range c.Samples {
-					if candidate.Name == name {
-						sm = candidate
-					}
+	ids := []string{
+		"conformance/property/results.summary.passed",
+		"conformance/property/results.summary.failed",
+		"conformance/property/results.tests[].duration",
+		"conformance/property/results.tests[].retries",
+		"conformance/report/summary-matches-final-results",
+		"conformance/report/history-excludes-final-attempt",
+		"conformance/report/flaky-matches-attempt-outcomes",
+	}
+	for _, id := range ids {
+		t.Run(id, func(t *testing.T) {
+			var entry *s.Entry
+			for i := range s.Catalogue.Entries {
+				if s.Catalogue.Entries[i].ID == id {
+					entry = &s.Catalogue.Entries[i]
+					break
 				}
-				one := c.With(sm)
-				err := s.Check(e, &one)
-				if err == nil || !MatchKnownFailure(e, sm, *issue, err) {
-					t.Fatalf("recorded defect did not reproduce: %s: %v", name, err)
+			}
+			if entry == nil {
+				t.Fatal("missing family", id)
+			}
+			if KnownIssue(*entry) != nil {
+				t.Fatal("retry defect still exempted")
+			}
+			count := 0
+			for _, sample := range c.Samples {
+				if sample.Name != "recovery" && sample.Name != "exhaustion" && sample.Name != "regression" {
+					continue
 				}
-				if MatchKnownFailure(e, sm, *issue, errors.New("infrastructure")) {
-					t.Fatal("infrastructure swallowed")
+				one := c.With(sample)
+				if err := s.Check(*entry, &one); err != nil {
+					t.Fatalf("%s: %v", sample.Name, err)
 				}
-				m, ok := err.(*s.Mismatch)
-				if !ok {
-					t.Fatal(err)
-				}
-				changed := *m
-				changed.Expected = "changed"
-				if MatchKnownFailure(e, sm, *issue, &changed) {
-					t.Fatal("changed mismatch swallowed")
-				}
-				fixed := sm
-				fixed.Name = "unrecorded"
-				if MatchKnownFailure(e, fixed, *issue, err) {
-					t.Fatal("unrecorded sample swallowed")
-				}
+				count++
+			}
+			if count != 3 {
+				t.Fatal("missing retry evidence")
 			}
 		})
 	}
