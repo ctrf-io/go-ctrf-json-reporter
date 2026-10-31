@@ -43,7 +43,7 @@ func Test_Enrich_Reporter(t *testing.T) {
 		require.NotEmpty(t, result.AttemptID)
 		require.Empty(t, actual.RunID)
 		if len(result.RetryAttempts) > 0 {
-			require.Equal(t, result.AttemptID, result.RetryAttempts[len(result.RetryAttempts)-1].AttemptID)
+			require.NotEqual(t, result.AttemptID, result.RetryAttempts[len(result.RetryAttempts)-1].AttemptID)
 		}
 		result.AttemptID = ""
 		result.TestID, result.ExecutionID = "", ""
@@ -169,7 +169,7 @@ func Test_Enrich_ReporterWithUnorderedMessages(t *testing.T) {
 		require.NotEmpty(t, result.AttemptID)
 		require.Empty(t, actual.RunID)
 		if len(result.RetryAttempts) > 0 {
-			require.Equal(t, result.AttemptID, result.RetryAttempts[len(result.RetryAttempts)-1].AttemptID)
+			require.NotEqual(t, result.AttemptID, result.RetryAttempts[len(result.RetryAttempts)-1].AttemptID)
 		}
 		result.AttemptID = ""
 		result.TestID, result.ExecutionID = "", ""
@@ -185,7 +185,7 @@ func TestDetectFlakyTests(t *testing.T) {
 	expected := &ctrf.Report{Results: &ctrf.Results{
 		Summary: &ctrf.Summary{
 			Tests:   4,
-			Passed:  1,
+			Passed:  2,
 			Failed:  1,
 			Skipped: 1,
 			Flaky:   1,
@@ -210,11 +210,11 @@ func TestDetectFlakyTests(t *testing.T) {
 				Status:   ctrf.TestFailed,
 				Suite:    []string{"github.com/ctrf-io/go-ctrf-json-reporter/examples/flaky"},
 				Filepath: "reporter_test.go",
-				Retries:  3,
-				Start:    1775245677863, // The start time of the first event for the first retry
+				Retries:  2,
+				Start:    1775245679196, // The start time of the final attempt
 				Stop:     1775245679247, // The stop time of the last event for the last retry
-				Duration: 150,
-				Message:  "",
+				Duration: 50,
+				Message:  "=== RUN   Test_Flaky_Fail\n    flaky_test.go:21: This test is designed to fail.\n--- FAIL: Test_Flaky_Fail (0.05s)\n",
 				RetryAttempts: []ctrf.RetryAttempt{
 					{
 						Attempt: 1, Status: ctrf.TestFailed, Start: 1775245677863, Stop: 1775245677914, Duration: 50,
@@ -222,10 +222,6 @@ func TestDetectFlakyTests(t *testing.T) {
 					},
 					{
 						Attempt: 2, Status: ctrf.TestFailed, Start: 1775245678350, Stop: 1775245678401, Duration: 50,
-						Message: "=== RUN   Test_Flaky_Fail\n    flaky_test.go:21: This test is designed to fail.\n--- FAIL: Test_Flaky_Fail (0.05s)\n",
-					},
-					{
-						Attempt: 3, Status: ctrf.TestFailed, Start: 1775245679196, Stop: 1775245679247, Duration: 50,
 						Message: "=== RUN   Test_Flaky_Fail\n    flaky_test.go:21: This test is designed to fail.\n--- FAIL: Test_Flaky_Fail (0.05s)\n",
 					},
 				},
@@ -243,10 +239,10 @@ func TestDetectFlakyTests(t *testing.T) {
 				Status:   ctrf.TestPassed,
 				Suite:    []string{"github.com/ctrf-io/go-ctrf-json-reporter/examples/flaky"},
 				Filepath: "reporter_test.go",
-				Retries:  3,
+				Retries:  2,
 				Flaky:    true,
-				Duration: 150,
-				Start:    1775245677914,
+				Duration: 50,
+				Start:    1775245679595,
 				Stop:     1775245679646,
 				RetryAttempts: []ctrf.RetryAttempt{
 					{
@@ -257,7 +253,6 @@ func TestDetectFlakyTests(t *testing.T) {
 						Attempt: 2, Status: ctrf.TestFailed, Duration: 50, Start: 1775245678784, Stop: 1775245678837,
 						Message: "=== RUN   Test_Flaky_Flaky\n    flaky_test.go:54: Flaky Failure (attempt 2)\n--- FAIL: Test_Flaky_Flaky (0.05s)\n",
 					},
-					{Attempt: 3, Status: ctrf.TestPassed, Duration: 50, Start: 1775245679595, Stop: 1775245679646},
 				},
 			},
 		},
@@ -338,7 +333,7 @@ func TestDetectFlakyTests(t *testing.T) {
 		require.NotEmpty(t, result.AttemptID)
 		require.Empty(t, actual.RunID)
 		if len(result.RetryAttempts) > 0 {
-			require.Equal(t, result.AttemptID, result.RetryAttempts[len(result.RetryAttempts)-1].AttemptID)
+			require.NotEqual(t, result.AttemptID, result.RetryAttempts[len(result.RetryAttempts)-1].AttemptID)
 		}
 		result.AttemptID = ""
 		result.TestID, result.ExecutionID = "", ""

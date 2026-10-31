@@ -187,75 +187,60 @@ func addResult(report *ctrf.Report, result *ctrf.TestResult) {
 	// Update the overall test count in the Summary
 	report.Results.Summary.Tests++
 
-	// Update the sub-count based on the test result status
-	switch result.Status {
-	case ctrf.TestPassed:
-		report.Results.Summary.Passed++
-	case ctrf.TestFailed:
-		report.Results.Summary.Failed++
-	case ctrf.TestSkipped:
-		report.Results.Summary.Skipped++
-	case ctrf.TestPending:
-		report.Results.Summary.Pending++
-	default:
-		report.Results.Summary.Other++
-	}
+	adjustStatusCount(report.Results.Summary, result.Status, 1)
 
 	// Append the result to the report's results
 	report.Results.Tests = append(report.Results.Tests, result)
 }
 
+func adjustStatusCount(summary *ctrf.Summary, status ctrf.TestStatus, delta int) {
+	switch status {
+	case ctrf.TestPassed:
+		summary.Passed += delta
+	case ctrf.TestFailed:
+		summary.Failed += delta
+	case ctrf.TestSkipped:
+		summary.Skipped += delta
+	case ctrf.TestPending:
+		summary.Pending += delta
+	default:
+		summary.Other += delta
+	}
+}
+
 func updateResult(report *ctrf.Report, oldResult, newResult *ctrf.TestResult) {
-	// If the existing result does not have a retries field, initialize it, and move the
-	// results to the first RetryAttempts object
-	if oldResult.RetryAttempts == nil {
-		oldResult.Retries = 1
-		oldResult.RetryAttempts = append(oldResult.RetryAttempts, ctrf.RetryAttempt{
-			AttemptID: oldResult.AttemptID,
-			Attempt:   1,
-			Status:    oldResult.Status,
-			Message:   oldResult.Message,
-			Duration:  oldResult.Duration,
-			Start:     oldResult.Start,
-			Stop:      oldResult.Stop,
-		})
-	}
-
-	// If this is a pass after a failure, mark the test as flaky, not failed,
-	// and update the summary counts accordingly
-	if oldResult.Status == ctrf.TestFailed && newResult.Status == ctrf.TestPassed {
-		oldResult.Flaky = true
-		report.Results.Summary.Flaky++
-		report.Results.Summary.Failed--
-	}
-
-	// Update the overall test status to match that of the new result
-	oldResult.Status = newResult.Status
-
-	// Clear out the top-level message on the overall result, since the messages are in the retries
-	oldResult.Message = ""
-
-	// Update the times of the overall test result
-	oldResult.Duration += newResult.Duration
-	if newResult.Stop > oldResult.Stop {
-		oldResult.Stop = newResult.Stop
-	}
-	if newResult.Start < oldResult.Start {
-		oldResult.Start = newResult.Start
-	}
-
-	// Now add the new attempt to the retries
-	oldResult.Retries++
-	oldResult.RetryAttempts = append(oldResult.RetryAttempts, ctrf.RetryAttempt{
-		AttemptID: newResult.AttemptID,
-		Attempt:   oldResult.Retries,
-		Status:    newResult.Status,
-		Message:   newResult.Message,
-		Duration:  newResult.Duration,
-		Start:     newResult.Start,
-		Stop:      newResult.Stop,
+	// The previous final result becomes history only when another attempt finishes.
+	history := oldResult.RetryAttempts
+	history = append(history, ctrf.RetryAttempt{
+		AttemptID: oldResult.AttemptID,
+		Attempt:   len(oldResult.RetryAttempts) + 1,
+		Status:    oldResult.Status,
+		Message:   oldResult.Message,
+		Duration:  oldResult.Duration,
+		Start:     oldResult.Start,
+		Stop:      oldResult.Stop,
 	})
-	oldResult.AttemptID = newResult.AttemptID
+	newResult.RetryAttempts = history
+	newResult.Retries = len(history)
+	newResult.TestID = oldResult.TestID
+	newResult.ExecutionID = oldResult.ExecutionID
+	if newResult.Status == ctrf.TestPassed {
+		for _, attempt := range newResult.RetryAttempts {
+			if attempt.Status == ctrf.TestFailed {
+				newResult.Flaky = true
+				break
+			}
+		}
+	}
+	adjustStatusCount(report.Results.Summary, oldResult.Status, -1)
+	adjustStatusCount(report.Results.Summary, newResult.Status, 1)
+	if oldResult.Flaky {
+		report.Results.Summary.Flaky--
+	}
+	if newResult.Flaky {
+		report.Results.Summary.Flaky++
+	}
+	*oldResult = *newResult
 }
 
 // testNameKey generates a unique key for a map lookup based on the test name and suite.

@@ -33,5 +33,5 @@ func TestIdentityLifecycle(t *testing.T) {
 	require.NoError(t, err)
 	require.Empty(t, repeated.RunID)
 	require.Len(t, repeated.Results.Tests, 1)
-	require.Len(t, repeated.Results.Tests[0].RetryAttempts, 2)
+	require.Len(t, repeated.Results.Tests[0].RetryAttempts, 1)
 }
