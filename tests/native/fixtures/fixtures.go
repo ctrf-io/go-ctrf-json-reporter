@@ -73,7 +73,7 @@ func Source(events []Event) s.Object {
 		key := t["status"].(string)
 		summary[key] = s.Num(summary[key]) + 1
 	}
-	return s.Object{"reportFormat": "CTRF", "specVersion": "0.2.0", "generatedBy": "go-ctrf-json-reporter", "results": s.Object{"tool": s.Object{"name": "gotest"}, "summary": summary, "tests": out}}
+	return s.Object{"reportFormat": "CTRF", "specVersion": "0.3.0", "generatedBy": "go-ctrf-json-reporter", "results": s.Object{"tool": s.Object{"name": "gotest"}, "summary": summary, "tests": out}}
 }
 func hasFailed(a []interface{}) bool {
 	for _, v := range a {

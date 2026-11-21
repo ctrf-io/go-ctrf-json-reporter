@@ -32,5 +32,20 @@
   "checker/expected-failure/does-not-apply-at-unrecorded-level",
   "checker/expected-failure/allows-optional-absence-outside-defect-samples",
   "checker/expected-failure/rejects-unrelated-error-in-later-sample",
-  "checker/schema/shared-snapshot-matches-declared-files"
+  "checker/schema/shared-snapshot-matches-declared-files",
+  "checker/0.3.0/optional-fields-accept-omission-and-valid-emission",
+  "checker/0.3.0/rejects-description-even-without-capability",
+  "checker/0.3.0/rejects-retry-thread-even-without-capability",
+  "checker/0.3.0/rejects-empty-assertions-even-without-capability",
+  "checker/0.3.0/rejects-unformatted-comparison-even-without-capability",
+  "checker/0.3.0/rejects-empty-global-error-even-without-capability",
+  "checker/0.3.0/rejects-missing-provenance-inputs-even-without-capability",
+  "checker/0.3.0/rejects-bad-source-uuid-even-without-capability",
+  "checker/0.3.0/duplicate-identity-ignores-case-and-input-metadata",
+  "checker/0.3.0/no-self-reference-even-with-different-case",
+  "checker/0.3.0/direct-lineage-excludes-flattened-ancestors-and-omits-unidentified-sources",
+  "checker/0.3.0/assertion-and-thread-mapping-uses-independent-attempt-evidence",
+  "checker/0.3.0/global-errors-do-not-become-tests-even-if-counts-are-consistent",
+  "checker/0.3.0/error-merge-multiplicity-is-advisory-but-evidence-is-required",
+  "checker/0.3.0/core-accepts-opaque-extension-values-without-extension-validation"
 ]

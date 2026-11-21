@@ -1,4 +1,4 @@
-// Package shared implements the standard-checker-controls-v1 assertions in Go.
+// Package shared implements the standard-checker-controls-v2-0.3.0 assertions in Go.
 // Catalogue and control IDs follow the reviewed JavaScript snapshot. The Core
 // schema/specification, rather than producer output, define the oracle.
 package shared
@@ -108,6 +108,7 @@ type Sample struct {
 	Bytes            []byte
 	Report, Expected Object
 	RunWindow        [2]int64
+	DirectSources    []Object
 }
 type Context struct {
 	Samples, Repeated, Shards []Sample
@@ -121,7 +122,10 @@ func Validate(b []byte) error {
 	if e != nil {
 		return e
 	}
-	return documentSchema.Validate(o)
+	if err := documentSchema.Validate(o); err != nil {
+		return err
+	}
+	return checkProvenanceIdentities(o)
 }
 func mismatch(code string, actual, expected interface{}) error {
 	return &Mismatch{Code: code, Actual: actual, Expected: expected}
@@ -302,6 +306,9 @@ func statuses(a []interface{}, status string) float64 {
 	return n
 }
 func CheckRule(rule string, c *Context) error {
+	if handled, err := checkNewRule(rule, c); handled {
+		return err
+	}
 	if rule == "case-identity-stable-across-runs" {
 		if len(c.Repeated) < 2 {
 			return failure("missing repeated runs")

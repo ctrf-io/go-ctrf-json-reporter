@@ -738,5 +738,121 @@
   "conformance/report/respects-reserved-extension-ownership": {
     "supported": true,
     "reason": "Controlled, rerun, repeated and sharded source evidence is supplied."
+  },
+  "conformance/property/provenance": {
+    "supported": false,
+    "reason": "The reporter does not emit provenance."
+  },
+  "conformance/property/provenance.inputs": {
+    "supported": false,
+    "reason": "The reporter does not emit provenance.inputs."
+  },
+  "conformance/property/provenance.inputs[].reportId": {
+    "supported": false,
+    "reason": "The reporter does not emit provenance.inputs[].reportId."
+  },
+  "conformance/property/provenance.inputs[].extra": {
+    "supported": false,
+    "reason": "The reporter does not emit provenance.inputs[].extra."
+  },
+  "conformance/property/provenance.extra": {
+    "supported": false,
+    "reason": "The reporter does not emit provenance.extra."
+  },
+  "conformance/property/results.tests[].description": {
+    "supported": false,
+    "reason": "The reporter does not emit results.tests[].description."
+  },
+  "conformance/property/results.tests[].assertionFailures": {
+    "supported": false,
+    "reason": "The reporter does not emit results.tests[].assertionFailures."
+  },
+  "conformance/property/results.tests[].assertionFailures[].message": {
+    "supported": false,
+    "reason": "The reporter does not emit results.tests[].assertionFailures[].message."
+  },
+  "conformance/property/results.tests[].assertionFailures[].trace": {
+    "supported": false,
+    "reason": "The reporter does not emit results.tests[].assertionFailures[].trace."
+  },
+  "conformance/property/results.tests[].assertionFailures[].expected": {
+    "supported": false,
+    "reason": "The reporter does not emit results.tests[].assertionFailures[].expected."
+  },
+  "conformance/property/results.tests[].assertionFailures[].actual": {
+    "supported": false,
+    "reason": "The reporter does not emit results.tests[].assertionFailures[].actual."
+  },
+  "conformance/property/results.tests[].assertionFailures[].extra": {
+    "supported": false,
+    "reason": "The reporter does not emit results.tests[].assertionFailures[].extra."
+  },
+  "conformance/property/results.tests[].retryAttempts[].assertionFailures": {
+    "supported": false,
+    "reason": "The reporter does not emit results.tests[].retryAttempts[].assertionFailures."
+  },
+  "conformance/property/results.tests[].retryAttempts[].assertionFailures[].message": {
+    "supported": false,
+    "reason": "The reporter does not emit results.tests[].retryAttempts[].assertionFailures[].message."
+  },
+  "conformance/property/results.tests[].retryAttempts[].assertionFailures[].trace": {
+    "supported": false,
+    "reason": "The reporter does not emit results.tests[].retryAttempts[].assertionFailures[].trace."
+  },
+  "conformance/property/results.tests[].retryAttempts[].assertionFailures[].expected": {
+    "supported": false,
+    "reason": "The reporter does not emit results.tests[].retryAttempts[].assertionFailures[].expected."
+  },
+  "conformance/property/results.tests[].retryAttempts[].assertionFailures[].actual": {
+    "supported": false,
+    "reason": "The reporter does not emit results.tests[].retryAttempts[].assertionFailures[].actual."
+  },
+  "conformance/property/results.tests[].retryAttempts[].assertionFailures[].extra": {
+    "supported": false,
+    "reason": "The reporter does not emit results.tests[].retryAttempts[].assertionFailures[].extra."
+  },
+  "conformance/property/results.tests[].retryAttempts[].threadId": {
+    "supported": false,
+    "reason": "The reporter does not emit results.tests[].retryAttempts[].threadId."
+  },
+  "conformance/property/results.errors": {
+    "supported": false,
+    "reason": "The reporter does not emit results.errors."
+  },
+  "conformance/property/results.errors[].message": {
+    "supported": false,
+    "reason": "The reporter does not emit results.errors[].message."
+  },
+  "conformance/property/results.errors[].trace": {
+    "supported": false,
+    "reason": "The reporter does not emit results.errors[].trace."
+  },
+  "conformance/property/results.errors[].extra": {
+    "supported": false,
+    "reason": "The reporter does not emit results.errors[].extra."
+  },
+  "conformance/report/provenance-identities-are-distinct": {
+    "supported": false,
+    "reason": "The reporter does not emit provenance."
+  },
+  "conformance/report/provenance-records-direct-sources": {
+    "supported": false,
+    "reason": "The reporter produces reports from native Go events; it does not merge source reports."
+  },
+  "conformance/report/assertion-failures-belong-to-attempt": {
+    "supported": false,
+    "reason": "The reporter preserves native failure output as messages and does not emit structured assertionFailures."
+  },
+  "conformance/report/global-errors-belong-to-run": {
+    "supported": false,
+    "reason": "The reporter does not emit structured run-level errors."
+  },
+  "conformance/report/thread-ids-belong-to-attempt": {
+    "supported": false,
+    "reason": "Native Go test JSON does not expose worker identities; the reporter does not emit threadId."
+  },
+  "conformance/report/global-error-merge-preserves-inputs": {
+    "supported": false,
+    "reason": "The reporter does not merge source reports or their global errors."
   }
 }

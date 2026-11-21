@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -62,7 +62,7 @@ func TestRequiredProperties(t *testing.T) {
 
 	expectedJson := `{
   "reportFormat": "CTRF",
-  "specVersion": "0.2.0",
+  "specVersion": "0.3.0",
   "timestamp": "0001-01-01T00:00:00Z",
   "results": {
     "tool": {
