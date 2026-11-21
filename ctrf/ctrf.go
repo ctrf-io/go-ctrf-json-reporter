@@ -25,7 +25,7 @@ type Report struct {
 
 const (
 	ReportFormatCTRF   = "CTRF"
-	SpecVersionCTRF    = "0.2.0"
+	SpecVersionCTRF    = "0.3.0"
 	GeneratedByDefault = "go-ctrf-json-reporter"
 )
 

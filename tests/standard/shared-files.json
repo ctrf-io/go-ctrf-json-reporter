@@ -1,22 +1,36 @@
 {
-  "revision": "standard-checker-controls-v1",
-  "implementation": "native-go-v1",
+  "revision": "standard-checker-controls-v2-0.3.0",
+  "implementation": "native-go-v2-0.3.0",
   "source": {
     "repository": "ctrf-io/jest-ctrf-json-reporter",
-    "commit": "a067e6d94f172db0636c4bd1d9c3706cafae2b48"
+    "commit": "b184f666c9a9982fa7d2c5a79c23d38f8b16d82b",
+    "revision": "standard-checker-controls-v2-0.3.0",
+    "files": {
+      "conformance/shared/catalogue.json": "a56d95e1aaecca13bbf5ec3449c30decdddb796c6a6d9e288be7fa8c4b9a5858",
+      "conformance/shared/checks.mjs": "80dd770f645e3f76bd002624aa27be8df244f846cf82afd0335bed2af1abddcf",
+      "conformance/shared/expected-failures.mjs": "c8677174694a5ce433abd54205f5f2122e0d0b37ee062d6fa39df9f615d09120",
+      "checker/checker.test.mjs": "bb03bcc08e0c8808483f9352b429c4dfc0e52f89929474023f9071f6ae7ca195",
+      "checker/run.mjs": "132eb103a0d2d939151110c62b639432d371d9d081f8d2adc26b7d6fd73836dc",
+      "conformance/reporters/ctrf.mjs": "eb41706584829f359c7a1a574a4773dfaaa40c27d5f8c802f5c5a895f05033ba",
+      "conformance/reporters/node.mjs": "dfe202dea4c8813c9bed6fea1ec0bcd7635c45066a95bf7e58d8df114f589c69",
+      "run-all.mjs": "0e7029e95ea4a36fc4438cd5eb6cf3703ffa56152f97bc6dc2a75bbf1cb6da4a"
+    }
   },
   "schema": {
     "repository": "ctrf-io/ctrf",
-    "commit": "e325eb33c7662a208bfa4d093a41cc55439d6e6a",
+    "commit": "6cafa1ebdf4d5286f6e208124d313269aa357411",
     "path": "schema/ctrf.schema.json",
-    "specVersion": "0.2.0"
+    "specVersion": "0.3.0",
+    "tag": "v0.3.0"
   },
   "files": {
-    "conformance/shared/catalogue.json": "a700f698e2c7b9a695628fb56e491fea49eaecb464b74b790752d4abcfde1c6c",
-    "conformance/shared/ctrf.schema.json": "cb9bd075beb0e046076046793f96bb1ba72bd1b1d331b1fbd42ac0ea36776cf3",
-    "conformance/shared/checks.go": "fde1e73613d0d5487ab74f85e25b3ffb201578769563038e346838303df7d974",
+    "conformance/shared/catalogue.json": "a56d95e1aaecca13bbf5ec3449c30decdddb796c6a6d9e288be7fa8c4b9a5858",
+    "conformance/shared/ctrf.schema.json": "d8765d80a8cf2e9e81611f5db97497599f56949938255ae2bf4aca84e234dd21",
+    "conformance/shared/checks.go": "73c9e235001e8869c2c587dce14db1d7face6a8e1443b2baa13ab92b73ee21f2",
     "conformance/shared/expected_failures.go": "c1c26ce13d77a3816f26e194303afab151faa19f9f1e5af7f1d6136a4c9e42fe",
-    "checker/checker_test.go": "789c0c95d6381f190ec85200f4f61463039f4ecf9dcdc0a7949a085fcd427459",
-    "conformance/shared/checker-ids.json": "4f76b232fb878b5963b084ef4394433b981bab3bc06e19f669d24b2d1c6c9dc8"
+    "checker/checker_test.go": "309fc2a602f9ed456365636e715c3913b69d1f8e8e018e5a9167aa1d9426198f",
+    "conformance/shared/checker-ids.json": "5f352bc8c5270601e912d31ba34c453f16be223d7b622a8b5bd547fa6c4ae97a",
+    "conformance/shared/checks_030.go": "784a7ae99d98bc1ec5310009908b830ddf6c12e44d1c53b4ffafe5d44014159a",
+    "checker/checker_030_test.go": "13fb347fc2009d8e01e1bcd650b74bd2c17d8fca6764a8f4f20087b0ce8a6953"
   }
 }

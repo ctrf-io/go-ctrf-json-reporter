@@ -22,7 +22,7 @@ func entry(kind, key string) s.Entry {
 	panic(key)
 }
 func valid() s.Context {
-	o, err := s.Decode([]byte(`{"reportFormat":"CTRF","specVersion":"0.2.0","results":{"tool":{"name":"independent-control"},"summary":{"tests":1,"passed":1,"failed":0,"pending":0,"skipped":0,"other":0,"start":100,"stop":120},"tests":[{"name":"case","status":"passed","duration":12,"retries":1,"flaky":true,"attemptId":"final","retryAttempts":[{"attempt":1,"attemptId":"first","status":"failed"}]}]}}`))
+	o, err := s.Decode([]byte(`{"reportFormat":"CTRF","specVersion":"0.3.0","results":{"tool":{"name":"independent-control"},"summary":{"tests":1,"passed":1,"failed":0,"pending":0,"skipped":0,"other":0,"start":100,"stop":120},"tests":[{"name":"case","status":"passed","duration":12,"retries":1,"flaky":true,"attemptId":"final","retryAttempts":[{"attempt":1,"attemptId":"first","status":"failed"}]}]}}`))
 	if err != nil {
 		panic(err)
 	}
@@ -50,6 +50,9 @@ func TestChecker(t *testing.T) {
 		"specification/rejects-utf8-without-bom-mutation", "specification/rejects-summary-matches-final-results-mutation", "specification/rejects-history-orders-contiguous-attempts-mutation", "specification/rejects-retry-count-matches-history-length-mutation", "specification/rejects-history-excludes-final-attempt-mutation", "specification/rejects-flaky-matches-attempt-outcomes-mutation", "specification/rejects-attempt-identity-scoped-to-execution-mutation", "specification/rejects-respects-reserved-extension-ownership-mutation", "specification/rejects-source-duration-unit-mismatch", "specification/missing-contextual-evidence-fails", "specification/timing-recommendation-warns", "specification/total-count-recommendation-warns-but-bounds-fail",
 		"expected-failure/accepts-only-recorded-mismatch", "expected-failure/rejects-unexpected-pass", "expected-failure/rejects-partial-fix", "expected-failure/rejects-different-value", "expected-failure/rejects-missing-sample", "expected-failure/rejects-duplicate-sample", "expected-failure/rejects-unrecorded-broken-sample", "expected-failure/rejects-infrastructure-error", "expected-failure/does-not-apply-at-unrecorded-level", "expected-failure/allows-optional-absence-outside-defect-samples", "expected-failure/rejects-unrelated-error-in-later-sample", "schema/shared-snapshot-matches-declared-files",
 	}
+	for _, id := range controls030 {
+		ids = append(ids, "0.3.0/"+id)
+	}
 	actualIDs := []string{}
 	for _, id := range ids {
 		actualIDs = append(actualIDs, "checker/"+id)
@@ -60,6 +63,10 @@ func TestChecker(t *testing.T) {
 	for _, id := range ids {
 		id := id
 		t.Run("checker/"+id, func(t *testing.T) {
+			if strings.HasPrefix(id, "0.3.0/") {
+				check030(t, strings.TrimPrefix(id, "0.3.0/"))
+				return
+			}
 			c := valid()
 			o := c.Samples[0].Report
 			test := s.Obj(s.Tests(o)[0])
@@ -172,7 +179,7 @@ func TestChecker(t *testing.T) {
 					Files    map[string]string
 				}
 				accepted(t, json.Unmarshal(b, &manifest))
-				if manifest.Revision != "standard-checker-controls-v1" || len(manifest.Files) < 5 {
+				if manifest.Revision != "standard-checker-controls-v2-0.3.0" || len(manifest.Files) < 5 {
 					t.Fatal("missing native snapshot provenance")
 				}
 				for path, want := range manifest.Files {

@@ -239,7 +239,7 @@ func ReportWithInventory(reader io.Reader, scope string, exit int, inventory Inv
 		status := test["status"].(string)
 		summary[status] = s.Num(summary[status]) + 1
 	}
-	report := s.Object{"reportFormat": "CTRF", "specVersion": "0.2.0", "results": s.Object{"tool": s.Object{"name": "Go test assessment"}, "summary": summary, "tests": tests}}
+	report := s.Object{"reportFormat": "CTRF", "specVersion": "0.3.0", "results": s.Object{"tool": s.Object{"name": "Go test assessment"}, "summary": summary, "tests": tests}}
 	b, err := json.MarshalIndent(report, "", "  ")
 	if err != nil {
 		return nil, err
